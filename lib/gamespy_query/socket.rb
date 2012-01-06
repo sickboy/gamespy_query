@@ -1,6 +1,8 @@
 # encoding: utf-8
 # GameSpy query class by Sickboy [Patrick Roza] (sb_at_dev-heaven.net)
 
+
+
 require 'yaml'
 require_relative 'base'
 require_relative 'parser'
@@ -261,7 +263,7 @@ end
 if $0 == __FILE__
   host = ARGV[0]
   port = ARGV[1]
-  g = Six::Query::Gamespy.new(host, port)
+  g = GamespyQuery::Socket.new(host, port)
   r = g.sync
   exit unless r
   puts r.to_yaml

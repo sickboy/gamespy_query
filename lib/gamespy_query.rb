@@ -1,7 +1,7 @@
-require "gamespy_query/version"
-require "gamespy_query/base"
-require "gamespy_query/socket"
-require "gamespy_query/master"
+require_relative "gamespy_query/version"
+require_relative "gamespy_query/base"
+require_relative "gamespy_query/socket"
+require_relative "gamespy_query/master"
 
 module GamespyQuery
   # Your code goes here...
