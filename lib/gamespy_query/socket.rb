@@ -33,13 +33,9 @@ module GamespyQuery
     STR_EMPTY = Tools::STR_EMPTY
     STR_BLA = "%c%c%c%c".encode("ASCII-8BIT")
     STR_GARBAGE = "\x00\x04\x05\x06\a"
-    STR_SIX = "$SIX_OVERWRITE_PREVIOUS$"
-    STR_SIX_X0 = "\x00#{STR_SIX}\x00"
 
     RX_PLAYER_EMPTY = /^player_\x00\x00\x00/
     RX_PLAYER_INFO = /\x01(team|player|score|deaths)_.(.)/ # \x00 from previous packet, \x01 from continueing player info, (.) - should it overwrite previous value?
-
-    RX_X0_SPEC = /^\x00|[^\x00]+\x00?/
 
     RX_NO_CHALLENGE = /0@0$/
     RX_CHALLENGE = /0@/

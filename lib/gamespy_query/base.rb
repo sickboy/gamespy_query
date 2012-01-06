@@ -5,6 +5,7 @@ require 'logger'
 module GamespyQuery
   STR_X0, STR_X1, STR_X2 = "\x00", "\x01", "\x02"
   RX_X0, RX_X0_S, RX_X0_E = /\x00/, /^\x00/, /\x00$/
+  RX_X0_SPEC = /^\x00|[^\x00]+\x00?/
   STR_EMPTY = ""
 
   module Tools

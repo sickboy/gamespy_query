@@ -122,6 +122,8 @@ module GamespyQuery
     STR_PLAYER = "player_\x00\x00"
     STR_TEAM = "team_\x00\x00"
     STR_SCORE = "score_\x00\x00"
+    STR_SIX = "$SIX_OVERWRITE_PREVIOUS$"
+    STR_SIX_X0 = "\x00#{STR_SIX}\x00"
 
     # TODO: Cleanup
     def parse_player_data(packet)
