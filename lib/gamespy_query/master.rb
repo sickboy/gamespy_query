@@ -13,11 +13,16 @@ module GamespyQuery
       else
         "\\\\"
     end
-    GEOIP_PATH = case RUBY_PLATFORM
+
+    def geoip_path
+      return "" unless defined?(Rails)
+
+      case RUBY_PLATFORM
       when /-mingw32$/, /-mswin32$/
         File.join(Rails.root, "config").gsub("/", "\\")
       else
         File.join(Rails.root, "config")
+      end
     end
 
     def initialize(geo = nil, game = "arma2oapc")
@@ -31,7 +36,7 @@ module GamespyQuery
 
     def read
       geo = @geo ? @geo : "-Q 11 "
-      unless File.exists?(File.join(GEOIP_PATH, "GeoIP.dat"))
+      unless File.exists?(File.join(geoip_path, "GeoIP.dat"))
         puts
         puts "Warning: GeoIP.dat database missing. Can't parse countries. #{GEOIP_PATH}"
         geo = nil
