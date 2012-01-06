@@ -11,13 +11,10 @@ require_relative 'base'
 
 module GamespyQuery
   class Parser
-    STR_X0 = "\x00"
     STR_SPLIT = STR_X0
-    STR_EMPTY = ""
     STR_ID = "\x00\x04\x05\x06\a"
 
     RX_SPLITNUM = /^splitnum\x00(.)/i
-    RX_X0_E = /\x00$/
     RX_PLAYER_HEADER = /\x01/
     RX_END = /\x00\x02$/
 

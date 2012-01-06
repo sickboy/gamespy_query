@@ -25,7 +25,7 @@ module GamespyQuery
     STR_PLAYER = "player_\x00\x00"
     STR_TEAM = "team_\x00\x00"
     STR_SCORE = "score_\x00\x00"
-    STR_X0, STR_X1, STR_X2 = "\x00", "\x01", "\x02"
+
     SPLIT = STR_X0
     STR_END = "\x00\x02"
     STR_EMPTY = Tools::STR_EMPTY
@@ -36,7 +36,7 @@ module GamespyQuery
 
     RX_PLAYER_EMPTY = /^player_\x00\x00\x00/
     RX_PLAYER_INFO = /\x01(team|player|score|deaths)_.(.)/ # \x00 from previous packet, \x01 from continueing player info, (.) - should it overwrite previous value?
-    RX_X0, RX_X0_S, RX_X0_E = /\x00/, /^\x00/, /\x00$/
+
     RX_X0_SPEC = /^\x00|[^\x00]+\x00?/
 
     RX_NO_CHALLENGE = /0@0$/
