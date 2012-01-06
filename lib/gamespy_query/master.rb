@@ -15,7 +15,7 @@ module GamespyQuery
     end
 
     def geoip_path
-      return "" unless defined?(Rails)
+      return File.join(Dir.pwd, "config") unless defined?(Rails)
 
       case RUBY_PLATFORM
       when /-mingw32$/, /-mswin32$/
@@ -38,10 +38,10 @@ module GamespyQuery
       geo = @geo ? @geo : "-Q 11 "
       unless File.exists?(File.join(geoip_path, "GeoIP.dat"))
         puts
-        puts "Warning: GeoIP.dat database missing. Can't parse countries. #{GEOIP_PATH}"
+        puts "Warning: GeoIP.dat database missing. Can't parse countries. #{geoip_path}"
         geo = nil
       end
-      reply = %x[gslist -p "#{GEOIP_PATH}" -n #{@game} #{geo}-X #{PARAMS.clone.map{|e| "#{DELIMIT}#{e}"}.join("")}]
+      reply = %x[gslist -p "#{geoip_path}" -n #{@game} #{geo}-X #{PARAMS.clone.map{|e| "#{DELIMIT}#{e}"}.join("")}]
       reply.gsub!("\\\\\\", "") if geo
       reply.split("\n")
     end
