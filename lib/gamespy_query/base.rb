@@ -8,20 +8,28 @@ module GamespyQuery
   RX_X0_SPEC = /^\x00|[^\x00]+\x00?/
   STR_EMPTY = ""
 
+  DEBUG = false
+
   module Tools
     STR_EMPTY = ""
   
     module_function
     def logger
-      ActionController::Base.logger ||= Logger.new("logger.log")
+      @logger ||= ActionController::Base.logger || Logger.new("logger.log")
     end
   
     def debug(&block)
+      return unless DEBUG
       logger.debug yield
+    rescue Exception => e
+      puts "Error: #{e.class} #{e.message}, #{e.backtrace.join("\n")}"
     end
   end
   
   class Base
+    class TimeOutError < StandardError
+    end
+
     def strip_tags(str)
       # TODO: Strip tags!!
       str
