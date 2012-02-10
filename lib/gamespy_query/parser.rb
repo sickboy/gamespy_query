@@ -98,6 +98,10 @@ module GamespyQuery
       # Encoding
       get_string(packet)
     end
+    
+    def clean(str)
+      str.encode("UTF-8", invalid: :replace, undef: :replace)
+    end
 
     def parse_game_data(packet)
       Tools.debug {"Game Parsing #{packet.inspect}"}
@@ -109,7 +113,7 @@ module GamespyQuery
         if (index % 2) == 0
           key = data
         else
-          game_data[key] = data
+          game_data[key] = data.is_a?(String) ? clean(data) : data
         end
       end
 
@@ -167,7 +171,7 @@ module GamespyQuery
           # Parse the data - \x00 is printed after a non-nil entry, otherwise \x00 means nil (e.g empty team)
           until str.empty?
             entry = str[RX_X0_SPEC]
-            player_data[player_data.keys[i]] << entry.sub(STR_X0, STR_EMPTY)
+            player_data[player_data.keys[i]] << clean(entry.sub(STR_X0, STR_EMPTY))
             str.sub!(entry, STR_EMPTY)
           end
           
