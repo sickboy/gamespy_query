@@ -9,31 +9,43 @@ module GamespyQuery
 
     def process!
       jar = {}
-      # TODO: Keep filling the sockets array when array.size  < max_connections
-      max_connections = 64
+      # TODO: Keep filling the sockets array when sockets.size  < max_connections
+      max_connections = 5
       max_connections_int = max_connections - 1
+      timeout = 30
+
+      id_packet = ID_PACKET
+      packet = CHALLENGE_PACKET + id_packet
+
+      # States:
+      # 0 - Not begun
+      # 1 - Sent Challenge
+      # 2 - Received Challenge
+      # 3 - Sent Challenge Response
+      # 4 - Receive Data
+      # 5 - Ready
+
 
       until @addrs.empty?
         addrs = @addrs[0..max_connections_int]
         @addrs -= addrs
         sockets = addrs.map{|addr| s = UDPSocket.new; s.connect(*addr.split(":")); s }
         sockets.each_with_index {|s, i| jar[s] = {addr: addrs[i], data: [], state: 0, stamp: nil, needs_challenge: false, max_packets: MAX_PACKETS, failed: false}}
-        # States:
-        # 0 - Not begun
-        # 1 - Sent Challenge
-        # 2 - Received Challenge
-        # 3 - Sent Challenge Response
-        # 4 - Receive Data
-        # 5 - Ready
 
+        until sockets.empty?
+          puts "Loop, #{sockets.size}"
+          if sockets.size < max_connections
+            count = (max_connections - sockets.size) - 1
+            addrs = @addrs[0..count]
+            @addrs -= addrs
 
-        id_packet = ID_PACKET
-        packet = CHALLENGE_PACKET + id_packet
+            socks = addrs.map{|addr| s = UDPSocket.new; s.connect(*addr.split(":")); s }
+            socks.each_with_index {|s, i| jar[s] = {addr: addrs[i], data: [], state: 0, stamp: nil, needs_challenge: false, max_packets: MAX_PACKETS, failed: false}}
 
-        timeout = 3
+            sockets += socks
+          end
 
-        while !sockets.empty? && ready = IO.select(sockets, sockets, sockets)
-          #puts "YAY #{ready.inspect}"
+          ready = IO.select(sockets, sockets, sockets)
 
           processed = []
 
@@ -165,6 +177,7 @@ if $0 == __FILE__
     addrs << "#{$1}:#{$2}" if line =~ /([\d\.]+)[\s\t]*(\d+)/
   end
   # addrs = ["192.168.50.1:2356", "89.169.242.67:2302"]
+  #addrs = ["24.3.36.214:2311"]
   sm = GamespyQuery::SocketMaster.new(addrs)
   sm.process!
 end
