@@ -4,14 +4,13 @@ module GamespyQuery
   class SocketMaster < Base
     FILL_UP_ON_SPACE = true
     DEFAULT_MAX_CONNECTIONS = 128
-    DEFAULT_TIMEOUT = 3
 
     attr_accessor :timeout, :max_connections
 
     def initialize addrs
       @addrs = addrs
 
-      @timeout, @max_connections = DEFAULT_TIMEOUT, DEFAULT_MAX_CONNECTIONS # Per select iteration
+      @timeout, @max_connections = Socket::DEFAULT_TIMEOUT, DEFAULT_MAX_CONNECTIONS # Per select iteration
     end
 
     def process!
@@ -67,14 +66,13 @@ if $0 == __FILE__
   addrs = master.get_server_list srv
 
   time_start = Time.now
-
   sm = GamespyQuery::SocketMaster.new(addrs)
   sockets = sm.process!
+  time_taken = Time.now - time_start
 
   cool = sockets.count {|v| v.valid? }
   dude = sockets.size - cool
 
   puts "Success: #{cool}, Failed: #{dude}"
-  time_taken = Time.now - time_start
   puts "Took: #{time_taken}s"
 end

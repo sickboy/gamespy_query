@@ -37,7 +37,7 @@ module GamespyQuery
       def _create_socket(host, port)
         @ip_end_point = IPEndPoint.new(IPAddress.Any, 0)
         @s = UdpClient.new
-        @s.client.receive_timeout = TIMEOUT * 1000
+        @s.client.receive_timeout = DEFAULT_TIMEOUT * 1000
         @s.connect(host, port.to_i)
       end
 
@@ -64,7 +64,7 @@ module GamespyQuery
 
       def _socket_receive
         begin
-          Timeout::timeout(TIMEOUT) do
+          Timeout::timeout(DEFAULT_TIMEOUT) do
             @s.recvfrom(RECEIVE_SIZE)
           end
         rescue Timeout::Error
@@ -80,7 +80,7 @@ module GamespyQuery
   end
 
   class Socket < UDPSocket
-    TIMEOUT = 3
+    DEFAULT_TIMEOUT = 3
     MAX_PACKETS = 7
 
     ID_PACKET = [0x04, 0x05, 0x06, 0x07].pack("c*") # TODO: Randomize
@@ -278,13 +278,13 @@ module GamespyQuery
       begin
         until valid?
           if handle_state
-            if IO.select(nil, [self], nil, TIMEOUT)
+            if IO.select(nil, [self], nil, DEFAULT_TIMEOUT)
               handle_write
             else
               raise "TimeOut"
             end
           else
-            if IO.select([self], nil, nil, TIMEOUT)
+            if IO.select([self], nil, nil, DEFAULT_TIMEOUT)
               handle_read
             else
               raise "TimeOut"
@@ -315,8 +315,11 @@ if $0 == __FILE__
                else
     ARGV[0].split(":")
   end
+  time_start = Time.now
   g = GamespyQuery::Socket.new("#{host}:#{port}")
   r = g.sync
+  time_taken = Time.now - time_start
+  puts "Took: #{time_taken}s"
   exit unless r
   puts r.to_yaml
 end
