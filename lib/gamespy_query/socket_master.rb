@@ -23,7 +23,7 @@ module GamespyQuery
     # 1 - Sent Challenge
     # 2 - Received Challenge
     # 3 - Sent Challenge Response
-    # 4 - Receive Data
+    # 4 - Receive DataPackets (max 7)
     # 5 - Ready
     def process!
       jar = {}
@@ -156,11 +156,10 @@ module GamespyQuery
     end
 
     def handle_exc s, entry, sockets
-      #  puts "Exception: #{s.inspect}"
-      #  sockets.delete s
-      #  s.close
-      #  entry = jar[s]
-      #  entry[:failed] = true
+      puts "Exception: #{s.inspect}"
+      sockets.delete s
+      s.close
+      entry[:failed] = true
     end
 
 
@@ -208,12 +207,8 @@ if $0 == __FILE__
   jar = sm.process!
 
   cool, dude = 0, 0
-  jar.each_pair do |k, v|
-    if v[:state] >= 5
-      cool += 1
-    else
-      dude += 1
-    end
+  jar.values.each do |v|
+    v[:state] >= 5 ? cool += 1 : dude += 1
     puts v.inspect
   end
   puts "Success: #{cool}, Failed: #{dude}"
