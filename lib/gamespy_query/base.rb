@@ -25,8 +25,40 @@ module GamespyQuery
       puts "Error: #{e.class} #{e.message}, #{e.backtrace.join("\n")}"
     end
   end
-  
+
+  module Funcs
+    def handle_chr(number)
+      number = ((number % 256)+256) if number < 0
+      number = number % 256 if number > 255
+      number
+    end
+
+    def get_string(*params)
+      puts "Getting string #{params}"
+      _get_string(*params)
+    end
+
+    if RUBY_PLATFORM =~ /mswin32/
+      include System::Net
+      include System::Net::Sockets
+
+      def _get_string(str)
+        str.map {|e| e.chr}.join  #  begin; System::Text::Encoding.USASCII.GetString(reply[0]).to_s; rescue nil, Exception => e; Tools.log_exception(e); reply[0].map {|e| e.chr}.join; end
+      end
+    else
+      require 'socket'
+      require 'timeout'
+
+      def _get_string(str)
+        str
+      end
+
+    end
+  end
+
+
   class Base
+    include Funcs
     class TimeOutError < StandardError
     end
 

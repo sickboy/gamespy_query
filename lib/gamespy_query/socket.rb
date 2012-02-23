@@ -64,16 +64,11 @@ module GamespyQuery
       _socket_close(*params)
     end
 
-    def get_string(*params)
-      puts "Getting string #{params}"
-      _get_string(*params)
-    end
-
     if RUBY_PLATFORM =~ /mswin32/
       include System::Net
       include System::Net::Sockets
 
-      def get_string(str)
+      def _get_string(str)
         str.map {|e| e.chr}.join  #  begin; System::Text::Encoding.USASCII.GetString(reply[0]).to_s; rescue nil, Exception => e; Tools.log_exception(e); reply[0].map {|e| e.chr}.join; end
       end
 
@@ -96,13 +91,6 @@ module GamespyQuery
         @s.close
       end
     else
-      require 'socket'
-      require 'timeout'
-
-      def get_string(str)
-        str
-      end
-
       def _create_socket(host, port)
         @s = UDPSocket.new
         @s.connect(host, port)
@@ -248,12 +236,6 @@ module GamespyQuery
       data.each_pair {|k, d| Tools.debug {"GSPY Infos: #{k} #{d.size}"} } unless @silent || !$debug
 
       data
-    end
-
-    def handle_chr(number)
-      number = ((number % 256)+256) if number < 0
-      number = number % 256 if number > 255
-      number
     end
   end
 end
