@@ -1,5 +1,4 @@
 #require 'six/tools'
-require 'action_controller'
 require 'logger'
 
 module GamespyQuery
@@ -12,12 +11,26 @@ module GamespyQuery
 
   module Tools
     STR_EMPTY = ""
+    CHAR_N = "\n"
   
     module_function
     def logger
-      @logger ||= ActionController::Base.logger || Logger.new("logger.log")
+      @logger ||= defined?(ActionController) ? ActionController::Base.logger || Logger.new("logger.log") : Logger.new("logger.log")
     end
-  
+
+    def dbg_msg(e)
+      "#{e.class}: #{e.message if e.respond_to?(:backtrace)}
+BackTrace: #{e.backtrace.join(CHAR_N) unless !e.respond_to?(:backtrace) || e.backtrace.nil?}"
+    end
+
+
+    def log_exception(e, as_error = true, msg = "")
+      logger.error "#{"#{msg}:" unless msg.empty?}#{e.class} #{e.message}" if as_error
+
+      logger.debug dbg_msg(e)
+    end
+
+
     def debug(&block)
       return unless DEBUG
       logger.debug yield
@@ -59,7 +72,7 @@ module GamespyQuery
     end
 
     def get_string(*params)
-      puts "Getting string #{params}"
+      Tools.debug {"Getting string #{params}"}
       _get_string(*params)
     end
 

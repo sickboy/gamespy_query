@@ -46,8 +46,7 @@ module GamespyQuery
     def read
       geo = @geo ? @geo : "-Q 11 "
       unless File.exists?(File.join(geoip_path, "GeoIP.dat"))
-        puts
-        puts "Warning: GeoIP.dat database missing. Can't parse countries. #{geoip_path}"
+        Tools.logger.warn "Warning: GeoIP.dat database missing. Can't parse countries. #{geoip_path}"
         geo = nil
       end
       reply = %x[gslist -p "#{geoip_path}" -n #{@game} #{geo}-X #{PARAMS.clone.map{|e| "#{DELIMIT}#{e}"}.join("")}]

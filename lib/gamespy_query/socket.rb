@@ -1,14 +1,13 @@
 # encoding: utf-8
 # GameSpy query class by Sickboy [Patrick Roza] (sb_at_dev-heaven.net)
 
-
-
 require 'yaml'
 require_relative 'base'
 require_relative 'parser'
 require 'socket'
 
 module GamespyQuery
+  # TODO
   module MultiSocket
     def create_socket(*params)
       puts "Creating socket #{params}"
@@ -136,32 +135,32 @@ module GamespyQuery
     def valid?; @state == STATE_READY; end
 
     def handle_write
-      #STDOUT.puts "Write: #{self.inspect}, #{self.state}"
+      #Tools.debug {"Write: #{self.inspect}, #{self.state}"}
 
       r = true
       begin
         case self.state
           when STATE_INIT
-            STDOUT.puts "Write (0): #{self.inspect}"
+            Tools.debug {"Write (0): #{self.inspect}"}
             # Send Challenge
             self.puts @packet
             self.state = STATE_SENT_CHALLENGE
           when STATE_RECEIVED_CHALLENGE
-            STDOUT.puts "Write (2): #{self.inspect}"
+            Tools.debug {"Write (2): #{self.inspect}"}
             # Send Challenge response
             self.puts self.needs_challenge ? BASE_PACKET + @id_packet + self.needs_challenge + FULL_INFO_PACKET_MP : BASE_PACKET + @id_packet + FULL_INFO_PACKET_MP
             self.state = STATE_SENT_CHALLENGE_RESPONSE
         end
       rescue => e
-        STDOUT.puts "Error: #{e.message}, #{self.inspect}"
+        Tools.log_exception e
         self.failed = true
         r = false
-        close
+        close unless closed?
       end
 
 =begin
     if Time.now - self.stamp > @timeout
-      STDOUT.puts "TimedOut: #{self.inspect}"
+      Tools.debug {"TimedOut: #{self.inspect}"}
       self.failed = true
       r = false
       close unless closed?
@@ -171,28 +170,28 @@ module GamespyQuery
     end
 
     def handle_read
-      #STDOUT.puts "Read: #{self.inspect}, #{self.state}"
+      # Tools.debug {"Read: #{self.inspect}, #{self.state}"}
 
       r = true
       case self.state
         when STATE_SENT_CHALLENGE
           begin
             data = self.recvfrom_nonblock(RECEIVE_SIZE)
-            STDOUT.puts "Read (1): #{self.inspect}: #{data}"
+            Tools.debug {"Read (1): #{self.inspect}: #{data}"}
 
             handle_challenge get_string(data[0])
 
             self.state = STATE_RECEIVED_CHALLENGE
           rescue => e
-            STDOUT.puts "Error: #{e.message}, #{self.inspect}"
+            Tools.log_exception e
             self.failed = true
             r = false
-            close
+            close unless closed?
           end
         when STATE_SENT_CHALLENGE_RESPONSE, STATE_RECEIVE_DATA
           begin
             data = self.recvfrom_nonblock(RECEIVE_SIZE)
-            STDOUT.puts "Read (3,4): #{self.inspect}: #{data}"
+            Tools.debug {"Read (3,4): #{self.inspect}: #{data}"}
             self.state = STATE_RECEIVE_DATA
 
             game_data = get_string(data[0])
@@ -203,29 +202,28 @@ module GamespyQuery
             self.data[index] = game_data
 
             if self.data.size >= self.max_packets # OR we received the end-packet and all packets required
-              STDOUT.puts "Received packet limit: #{self.inspect}"
+              Tools.debug {"Received packet limit: #{self.inspect}"}
               self.state = STATE_READY
               r = false
               close unless closed?
             end
           rescue => e
-            STDOUT.puts "Error: #{e.message}, #{self.inspect}"
+            Tools.log_exception(e)
             self.failed = true
             r = false
-            close
+            close unless closed?
           end
       end
       r
     end
 
     def handle_exc
-      STDOUT.puts "Exception: #{self.inspect}"
-      close
+      Tools.debug {"Exception: #{self.inspect}"}
+      close unless closed?
       self.failed = true
 
       false
     end
-
 
     def handle_splitnum game_data
       index = 0
@@ -236,7 +234,7 @@ module GamespyQuery
         last = flag & 0x80 > 0
         # Data could be received out of order, use the "index" id when "last" flag is true, to determine total packet_count
         self.max_packets = index + 1 if last # update the max
-        STDOUT.puts "Splitnum: #{splitnum.inspect} (#{splitnum}) (#{flag}, #{index}, #{last}) Max: #{self.max_packets}"
+        Tools.debug {"Splitnum: #{splitnum.inspect} (#{splitnum}) (#{flag}, #{index}, #{last}) Max: #{self.max_packets}"}
       else
         self.max_packets = 1
       end
@@ -245,7 +243,7 @@ module GamespyQuery
     end
 
     def handle_challenge str
-      #STDOUT.puts "Received challenge response (#{str.length}): #{str.inspect}"
+      # Tools.debug{"Received challenge response (#{str.length}): #{str.inspect}"}
       need_challenge = !(str.sub(STR_X0, STR_EMPTY) =~ RX_NO_CHALLENGE)
       if need_challenge
         str = str.sub(RX_CHALLENGE, STR_EMPTY).gsub(RX_CHALLENGE2, STR_EMPTY).to_i
@@ -301,8 +299,9 @@ module GamespyQuery
         Tools.debug{"Gamespy pings: #{pings}, #{ping}"}
         @ping = ping
       rescue => e
-        STDOUT.puts "Error during fetch #{self.inspect}: #{e.message}"
+        Tools.log_exception(e)
         r = nil
+        close unless closed?
       end
       r
     end

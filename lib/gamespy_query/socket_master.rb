@@ -35,7 +35,7 @@ module GamespyQuery
           write_sockets, read_sockets = queue.reject {|s| s.valid? }.partition {|s| s.handle_state }
 
           unless ready = IO.select(read_sockets, write_sockets, nil, @timeout)
-            puts "Timeout, no usable sockets in current queue, within timeout period"
+            puts "Timeout, no usable sockets in current queue, within timeout period (#{@timeout}s)"
             queue.each{|s| s.close unless s.closed?}
             queue = []
             next
