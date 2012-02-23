@@ -120,33 +120,6 @@ module GamespyQuery
       end
     end
 
-    def handle_splitnum entry, game_data
-      index = 0
-      if game_data.sub(STR_GARBAGE, STR_EMPTY)[RX_SPLITNUM]
-        splitnum = $1
-        flag = splitnum.unpack("C")[0]
-        index = (flag & 127).to_i
-        last = flag & 0x80 > 0
-        # Data could be received out of order, use the "index" id when "last" flag is true, to determine total packet_count
-        entry[:max_packets] = index + 1 if last # update the max
-        puts "Splitnum: #{splitnum.inspect} (#{splitnum}) (#{flag}, #{index}, #{last}) Max: #{entry[:max_packets]}"
-      else
-        entry[:max_packets] = 1
-      end
-
-      index
-    end
-
-    def handle_challenge entry, str
-      #puts "Received challenge response (#{str.length}): #{str.inspect}"
-      need_challenge = !(str.sub(STR_X0, STR_EMPTY) =~ RX_NO_CHALLENGE)
-      if need_challenge
-        str = str.sub(RX_CHALLENGE, STR_EMPTY).gsub(RX_CHALLENGE2, STR_EMPTY).to_i
-        challenge_packet = sprintf(STR_BLA, handle_chr(str >> 24), handle_chr(str >> 16), handle_chr(str >> 8), handle_chr(str >> 0))
-        entry[:needs_challenge] = challenge_packet
-      end
-    end
-
     def handle_write s, entry, sockets
       #puts "Write: #{s.inspect}, #{entry}"
       begin
@@ -188,6 +161,34 @@ module GamespyQuery
       #  s.close
       #  entry = jar[s]
       #  entry[:failed] = true
+    end
+
+
+    def handle_splitnum entry, game_data
+      index = 0
+      if game_data.sub(STR_GARBAGE, STR_EMPTY)[RX_SPLITNUM]
+        splitnum = $1
+        flag = splitnum.unpack("C")[0]
+        index = (flag & 127).to_i
+        last = flag & 0x80 > 0
+        # Data could be received out of order, use the "index" id when "last" flag is true, to determine total packet_count
+        entry[:max_packets] = index + 1 if last # update the max
+        puts "Splitnum: #{splitnum.inspect} (#{splitnum}) (#{flag}, #{index}, #{last}) Max: #{entry[:max_packets]}"
+      else
+        entry[:max_packets] = 1
+      end
+
+      index
+    end
+
+    def handle_challenge entry, str
+      #puts "Received challenge response (#{str.length}): #{str.inspect}"
+      need_challenge = !(str.sub(STR_X0, STR_EMPTY) =~ RX_NO_CHALLENGE)
+      if need_challenge
+        str = str.sub(RX_CHALLENGE, STR_EMPTY).gsub(RX_CHALLENGE2, STR_EMPTY).to_i
+        challenge_packet = sprintf(STR_BLA, handle_chr(str >> 24), handle_chr(str >> 16), handle_chr(str >> 8), handle_chr(str >> 0))
+        entry[:needs_challenge] = challenge_packet
+      end
     end
   end
 end
