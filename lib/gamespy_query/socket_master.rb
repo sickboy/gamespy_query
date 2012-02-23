@@ -61,13 +61,9 @@ module GamespyQuery
 end
 
 if $0 == __FILE__
-  srv = File.open("servers.txt") { |f| f.read }
+  srv = File.open(ARGV[0] || "servers.txt") { |f| f.read }
   addrs = []
   srv.each_line { |line| addrs << "#{$1}:#{$2}" if line =~ /([\d\.]+)[\s\t]*(\d+)/ }
-
-  # addrs = ["192.168.50.1:2356", "89.169.242.67:2302"]
-  #addrs = ["95.156.228.83:2402"]
-  #addrs = addrs[0..9]
 
   time_start = Time.now
 

@@ -254,6 +254,8 @@ module GamespyQuery
       end
     end
 
+    def handle_state; [STATE_INIT, STATE_RECEIVED_CHALLENGE].include? state; end
+
     # Supports challenge/response and multi-packet
     def sync
       game_data, key, reply = {}, nil, self.fetch
@@ -290,10 +292,6 @@ module GamespyQuery
         r = nil
       end
       r
-    end
-
-    def handle_state
-      [STATE_INIT, STATE_RECEIVED_CHALLENGE].include? state
     end
   end
 end
