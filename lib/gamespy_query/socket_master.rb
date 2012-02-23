@@ -4,10 +4,10 @@ require_relative 'socket'
 module GamespyQuery
   class SocketMaster < Socket
     FILL_UP_ON_SPACE = true
-    MAX_CONNECTIONS = 128
+    DEFAULT_MAX_CONNECTIONS = 128
     DEFAULT_TIMEOUT = 3
 
-    attr_accessor :timeout
+    attr_accessor :timeout, :max_connections
 
     def initialize addrs
       @addrs = addrs
@@ -15,6 +15,7 @@ module GamespyQuery
       @packet = CHALLENGE_PACKET + @id_packet
 
       @timeout = DEFAULT_TIMEOUT # Per select iteration
+      @max_connections = DEFAULT_MAX_CONNECTIONS
     end
 
     # States:
@@ -26,7 +27,7 @@ module GamespyQuery
     # 5 - Ready
     def process!
       jar = {}
-      max_connections_int = MAX_CONNECTIONS - 1
+      max_connections_int = @max_connections - 1
 
       until @addrs.empty?
         addrs = @addrs[0..max_connections_int]
@@ -38,8 +39,8 @@ module GamespyQuery
           read_sockets, write_sockets, exc_sockets = [], [], []
 
           # Fill up the Sockets pool until max_conn
-          if FILL_UP_ON_SPACE && sockets.size < MAX_CONNECTIONS
-            count = (MAX_CONNECTIONS - sockets.size) - 1
+          if FILL_UP_ON_SPACE && sockets.size < @max_connections
+            count = (@max_connections - sockets.size) - 1
             addrs = @addrs[0..count]
             @addrs -= addrs
 
