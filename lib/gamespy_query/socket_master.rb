@@ -202,11 +202,9 @@ if $0 == __FILE__
   sm = GamespyQuery::SocketMaster.new(addrs)
   jar = sm.process!
 
-  cool, dude = 0, 0
-  jar.values.each do |v|
-    v[:state] >= 5 ? cool += 1 : dude += 1
-    puts v.inspect
-  end
+  dude = jar.values.count {|v| v[:state] < 5}
+  cool = jar.values.size - dude
+
   puts "Success: #{cool}, Failed: #{dude}"
   time_taken = Time.now - time_start
   puts "Took: #{time_taken}s"
