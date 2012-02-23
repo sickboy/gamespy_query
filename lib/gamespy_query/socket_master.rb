@@ -10,9 +10,9 @@ module GamespyQuery
     def process!
       jar = {}
       # TODO: Keep filling the sockets array when sockets.size  < max_connections
-      max_connections = 5
+      max_connections = 32
       max_connections_int = max_connections - 1
-      timeout = 30
+      timeout = 10
 
       id_packet = ID_PACKET
       packet = CHALLENGE_PACKET + id_packet
@@ -33,7 +33,7 @@ module GamespyQuery
         sockets.each_with_index {|s, i| jar[s] = {addr: addrs[i], data: [], state: 0, stamp: nil, needs_challenge: false, max_packets: MAX_PACKETS, failed: false}}
 
         until sockets.empty?
-          puts "Loop, #{sockets.size}"
+          #puts "Loop, #{sockets.size}"
           if sockets.size < max_connections
             count = (max_connections - sockets.size) - 1
             addrs = @addrs[0..count]
