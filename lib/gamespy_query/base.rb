@@ -27,6 +27,31 @@ module GamespyQuery
   end
 
   module Funcs
+    class TimeOutError < StandardError
+    end
+
+    def strip_tags(str)
+      # TODO: Strip tags!!
+      str
+    end
+
+    RX_F = /\A\-?[0-9][0-9]*\.[0-9]*\Z/
+    RX_I = /\A\-?[0-9][0-9]*\Z/
+    RX_S = /\A\-?0[0-9]+.*\Z/
+
+    def clean(value) # TODO: Force String, Integer, Float etc?
+      case value
+        when STR_X0
+          nil
+        when RX_F
+          value =~ RX_S ? strip_tags(value) : value.to_f
+        when RX_I
+          value =~ RX_S ? strip_tags(value) : value.to_i
+        else
+          strip_tags(value)
+      end
+    end
+
     def handle_chr(number)
       number = ((number % 256)+256) if number < 0
       number = number % 256 if number > 255
@@ -52,36 +77,11 @@ module GamespyQuery
       def _get_string(str)
         str
       end
-
     end
   end
 
 
   class Base
     include Funcs
-    class TimeOutError < StandardError
-    end
-
-    def strip_tags(str)
-      # TODO: Strip tags!!
-      str
-    end
-
-    RX_F = /\A\-?[0-9][0-9]*\.[0-9]*\Z/
-    RX_I = /\A\-?[0-9][0-9]*\Z/
-    RX_S = /\A\-?0[0-9]+.*\Z/
-
-    def clean(value) # TODO: Force String, Integer, Float etc?
-      case value
-        when STR_X0
-          nil
-        when RX_F
-          value =~ RX_S ? strip_tags(value) : value.to_f
-        when RX_I
-          value =~ RX_S ? strip_tags(value) : value.to_i
-        else
-          strip_tags(value)
-      end
-    end
   end
 end
