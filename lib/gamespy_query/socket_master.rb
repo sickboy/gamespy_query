@@ -77,71 +77,72 @@ module GamespyQuery
       case entry[:state]
         when 1
           begin
-            #data = s.recvfrom(RECEIVE_SIZE)
             data = s.recvfrom_nonblock(RECEIVE_SIZE)
-              #sockets.delete s
-              #s.close
+            puts "Read (1): #{s.inspect}, #{entry}: #{data}"
+            entry[:stamp] = Time.now
+
+            handle_challenge entry, get_string(data[0])
+
+            entry[:state] = 2
           rescue => e
             puts "Error: #{e.message}, #{entry}"
             entry[:failed] = true
             sockets.delete s
             s.close
-            return
           end
-          puts "Read (1): #{s.inspect}, #{entry}: #{data}"
-          entry[:stamp] = Time.now
-
-          # Receive challenge
-          challenge = data[0]
-          str = get_string(challenge)
-          puts "Received challenge response (#{str.length}): #{str.inspect}"
-          need_challenge = !(str.sub(STR_X0, STR_EMPTY) =~ RX_NO_CHALLENGE)
-          if need_challenge
-            str = str.sub(RX_CHALLENGE, STR_EMPTY).gsub(RX_CHALLENGE2, STR_EMPTY).to_i
-            challenge_packet = sprintf(STR_BLA, handle_chr(str >> 24), handle_chr(str >> 16), handle_chr(str >> 8), handle_chr(str >> 0))
-            entry[:needs_challenge] = challenge_packet
-          end
-
-          entry[:state] = 2
         when 3, 4
           begin
-            #data = s.recvfrom(RECEIVE_SIZE)
             data = s.recvfrom_nonblock(RECEIVE_SIZE)
+            puts "Read (3,4): #{s.inspect}, #{entry}: #{data}"
+            entry[:stamp] = Time.now
+            entry[:state] = 4
+
+            game_data = get_string(data[0])
+            Tools.debug {"Received (#{entry[:data].size + 1}):\n\n#{game_data.inspect}\n\n#{game_data}\n\n"}
+
+            index = handle_splitnum entry, game_data
+
+            entry[:data][index] = game_data
+
+            if entry[:data].size >= entry[:max_packets] # OR we received the end-packet and all packets required
+              puts "Received packet limit: #{entry}"
+              entry[:state] = 5
+              sockets.delete s
+              s.close unless s.closed?
+            end
           rescue => e
             puts "Error: #{e.message}, #{entry}"
             entry[:failed] = true
             sockets.delete s
             s.close
-            return
           end
-          puts "Read (3,4): #{s.inspect}, #{entry}: #{data}"
-          entry[:stamp] = Time.now
-          entry[:state] = 4
+      end
+    end
 
-          index = 0
+    def handle_splitnum entry, game_data
+      index = 0
+      if game_data.sub(STR_GARBAGE, STR_EMPTY)[RX_SPLITNUM]
+        splitnum = $1
+        flag = splitnum.unpack("C")[0]
+        index = (flag & 127).to_i
+        last = flag & 0x80 > 0
+        # Data could be received out of order, use the "index" id when "last" flag is true, to determine total packet_count
+        entry[:max_packets] = index + 1 if last # update the max
+        puts "Splitnum: #{splitnum.inspect} (#{splitnum}) (#{flag}, #{index}, #{last}) Max: #{entry[:max_packets]}"
+      else
+        entry[:max_packets] = 1
+      end
 
-          game_data = get_string(data[0])
-          Tools.debug {"Received (#{entry[:data].size + 1}):\n\n#{game_data.inspect}\n\n#{game_data}\n\n"}
+      index
+    end
 
-          if game_data.sub(STR_GARBAGE, STR_EMPTY)[RX_SPLITNUM]
-            splitnum = $1
-            flag = splitnum.unpack("C")[0]
-            index = (flag & 127).to_i
-            last = flag & 0x80 > 0
-            # Data could be received out of order, use the "index" id when "last" flag is true, to determine total packet_count
-            entry[:max_packets] = index + 1 if last # update the max
-            puts "Splitnum: #{splitnum.inspect} (#{splitnum}) (#{flag}, #{index}, #{last}) Max: #{entry[:max_packets]}"
-          else
-            entry[:max_packets] = 1
-          end
-          entry[:data][index] = game_data #.sub(RX_X0_S, STR_EMPTY) # Cut off first \x00 from package
-
-          if entry[:data].size >= entry[:max_packets] # OR we received the end-packet and all packets required
-            puts "Received packet limit: #{entry}"
-            entry[:state] = 5
-            sockets.delete s
-            s.close unless s.closed?
-          end
+    def handle_challenge entry, str
+      #puts "Received challenge response (#{str.length}): #{str.inspect}"
+      need_challenge = !(str.sub(STR_X0, STR_EMPTY) =~ RX_NO_CHALLENGE)
+      if need_challenge
+        str = str.sub(RX_CHALLENGE, STR_EMPTY).gsub(RX_CHALLENGE2, STR_EMPTY).to_i
+        challenge_packet = sprintf(STR_BLA, handle_chr(str >> 24), handle_chr(str >> 16), handle_chr(str >> 8), handle_chr(str >> 0))
+        entry[:needs_challenge] = challenge_packet
       end
     end
 
