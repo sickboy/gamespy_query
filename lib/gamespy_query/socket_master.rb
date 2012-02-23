@@ -33,17 +33,7 @@ module GamespyQuery
           read_sockets = []
           write_sockets = []
 
-          sockets.each {|s| unless jar[s][:state] >= 5; [0, 2].include?(jar[s][:state]) ? write_sockets << s : read_sockets << s; end }
-          #puts "Read: #{read_sockets.inspect}, Write: #{write_sockets.inspect}"
-          unless ready = IO.select(read_sockets, write_sockets, nil, @timeout)
-            puts "Timeout, no usable sockets within timeout"
-            sockets.each{|s| s.close unless s.closed?}
-            sockets = []
-            next
-          end
-          puts "Loop, Sockets: #{sockets.size}, AddrsLeft: #{@addrs.size}, ReadReady: #{"#{ready[0].size}, WriteReady: #{ready[1].size}, ExcReady: #{ready[2].size}" unless ready.nil?}"
-
-=begin
+          # Fill up the Sockets list until max_conn
           if sockets.size < max_connections
             count = (max_connections - sockets.size) - 1
             addrs = @addrs[0..count]
@@ -54,24 +44,25 @@ module GamespyQuery
 
             sockets += socks
           end
-=end
+
+          sockets.each {|s| unless jar[s][:state] >= 5; [0, 2].include?(jar[s][:state]) ? write_sockets << s : read_sockets << s; end }
+          #puts "Read: #{read_sockets.inspect}, Write: #{write_sockets.inspect}"
+          unless ready = IO.select(read_sockets, write_sockets, nil, @timeout)
+            puts "Timeout, no usable sockets within timeout"
+            sockets.each{|s| s.close unless s.closed?}
+            sockets = []
+            next
+          end
+          puts "Loop, Sockets: #{sockets.size}, AddrsLeft: #{@addrs.size}, ReadReady: #{"#{ready[0].size}, WriteReady: #{ready[1].size}, ExcReady: #{ready[2].size}" unless ready.nil?}"
 
           # Read
-          ready[0].each do |s|
-            entry = jar[s]
-            handle_read s, entry, sockets
-          end
+          ready[0].each { |s| handle_read s, jar[s], sockets }
 
           # Write
-          ready[1].each do |s|
-            entry = jar[s]
-            handle_write s, entry, sockets
-          end
+          ready[1].each { |s| handle_write s, jar[s], sockets }
 
           # Exceptions
-          #ready[2].each do |s|
-          #  handle_exc s, entry, sockets
-          #end
+          #ready[2].each { |s| handle_exc s, jar[s], sockets }
         end
       end
       puts "Finished"
