@@ -6,15 +6,22 @@ module GamespyQuery
     FILL_UP_ON_SPACE = true
     DEFAULT_MAX_CONNECTIONS = 128
     DEFAULT_TIMEOUT = 3
+    STATE_INIT, STATE_SENT_CHALLENGE, STATE_RECEIVED_CHALLENGE, STATE_SENT_CHALLENGE_RESPONSE, STATE_RECEIVE_DATA, STATE_READY = 0, 1, 2, 3, 4, 5
 
     attr_accessor :timeout, :max_connections
 
     class Socket < UDPSocket
       attr_accessor :addr, :data, :state, :stamp, :needs_challenge, :max_packets, :failed
-      def data; @data ||= []; end
-      def state; @state ||= 0; end
-      def max_packets; @max_packets ||= MAX_PACKETS; end
-      def valid?; @state == 5; end
+
+      def initialize(addr, address_family = ::Socket::AF_INET)
+        @addr, @data, @state, @max_packets = addr, [], 0, SocketMaster::MAX_PACKETS
+        super(address_family)
+        self.connect(*addr.split(":"))
+      end
+
+      def state=(state); @state = state; @stamp = Time.now; end
+
+      def valid?; @state == SocketMaster::STATE_READY; end
     end
 
     def initialize addrs
@@ -26,24 +33,12 @@ module GamespyQuery
       @max_connections = DEFAULT_MAX_CONNECTIONS
     end
 
-    # States:
-    # 0 - Not begun
-    # 1 - Sent Challenge
-    # 2 - Received Challenge
-    # 3 - Sent Challenge Response
-    # 4 - Receive DataPackets (max 7)
-    # 5 - Ready
     def process!
       sockets = []
 
       until @addrs.empty?
         addrs = @addrs.shift @max_connections
-        queue = addrs.map do |addr|
-          s = Socket.new
-          s.connect(*addr.split(":"))
-          s.addr = addr
-          s
-        end
+        queue = addrs.map { |addr| Socket.new(addr) }
 
         sockets += queue
 
@@ -51,13 +46,7 @@ module GamespyQuery
           # Fill up the Sockets pool until max_conn
           if FILL_UP_ON_SPACE && queue.size < @max_connections
             addrs = @addrs.shift (@max_connections - queue.size)
-
-            socks = addrs.map do |addr|
-              s = Socket.new
-              s.connect(*addr.split(":"))
-              s.addr = addr
-              s
-            end
+            socks = addrs.map { |addr| Socket.new(addr) }
 
             queue += socks
             sockets += socks
@@ -89,27 +78,25 @@ module GamespyQuery
 
     def handle_read s, queue
       case s.state
-        when 1
+        when STATE_SENT_CHALLENGE
           begin
             data = s.recvfrom_nonblock(RECEIVE_SIZE)
             puts "Read (1): #{s.inspect}: #{data}"
-            s.stamp = Time.now
 
             handle_challenge s, get_string(data[0])
 
-            s.state = 2
+            s.state = STATE_RECEIVED_CHALLENGE
           rescue => e
             puts "Error: #{e.message}, #{s.inspect}"
             s.failed = true
             queue.delete s
             s.close
           end
-        when 3, 4
+        when STATE_SENT_CHALLENGE_RESPONSE, STATE_RECEIVE_DATA
           begin
             data = s.recvfrom_nonblock(RECEIVE_SIZE)
             puts "Read (3,4): #{s.inspect}: #{data}"
-            s.stamp = Time.now
-            s.state = 4
+            s.state = STATE_RECEIVE_DATA
 
             game_data = get_string(data[0])
             Tools.debug {"Received (#{s.data.size + 1}):\n\n#{game_data.inspect}\n\n#{game_data}\n\n"}
@@ -120,7 +107,7 @@ module GamespyQuery
 
             if s.data.size >= s.max_packets # OR we received the end-packet and all packets required
               puts "Received packet limit: #{s.inspect}"
-              s.state = 5
+              s.state = STATE_READY
               queue.delete s
               s.close unless s.closed?
             end
@@ -137,20 +124,18 @@ module GamespyQuery
       #puts "Write: #{s.inspect}"
       begin
         case s.state
-          when 0
+          when STATE_INIT
             puts "Write (0): #{s.inspect}"
             # Send Challenge
             s.puts @packet
-            s.state = 1
-            s.stamp = Time.now
-          when 2
+            s.state = STATE_SENT_CHALLENGE
+          when STATE_RECEIVED_CHALLENGE
             puts "Write (2): #{s.inspect}"
             # Send Challenge response
             packet = s.needs_challenge ? BASE_PACKET + @id_packet + s.needs_challenge + FULL_INFO_PACKET_MP : BASE_PACKET + @id_packet + FULL_INFO_PACKET_MP
             s.puts packet
 
-            s.state = 3
-            s.stamp = Time.now
+            s.state = STATE_SENT_CHALLENGE_RESPONSE
         end
       rescue => e
         puts "Error: #{e.message}, #{s.inspect}"
