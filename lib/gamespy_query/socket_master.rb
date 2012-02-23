@@ -3,12 +3,18 @@ require_relative 'socket'
 
 module GamespyQuery
   class SocketMaster < Socket
+    FILL_UP_ON_SPACE = true
+    MAX_CONNECTIONS = 128
+    DEFAULT_TIMEOUT = 3
+
+    attr_accessor :timeout
+
     def initialize addrs
       @addrs = addrs
       @id_packet = ID_PACKET
       @packet = CHALLENGE_PACKET + @id_packet
 
-      @timeout = 5 # Per select iteration
+      @timeout = DEFAULT_TIMEOUT # Per select iteration
     end
 
     # States:
@@ -20,8 +26,7 @@ module GamespyQuery
     # 5 - Ready
     def process!
       jar = {}
-      max_connections = 100
-      max_connections_int = max_connections - 1
+      max_connections_int = MAX_CONNECTIONS - 1
 
       until @addrs.empty?
         addrs = @addrs[0..max_connections_int]
@@ -30,12 +35,11 @@ module GamespyQuery
         sockets.each_with_index {|s, i| jar[s] = {addr: addrs[i], data: [], state: 0, stamp: nil, needs_challenge: false, max_packets: MAX_PACKETS, failed: false}}
 
         until sockets.empty?
-          read_sockets = []
-          write_sockets = []
+          read_sockets, write_sockets, exc_sockets = [], [], []
 
-          # Fill up the Sockets list until max_conn
-          if sockets.size < max_connections
-            count = (max_connections - sockets.size) - 1
+          # Fill up the Sockets pool until max_conn
+          if FILL_UP_ON_SPACE && sockets.size < MAX_CONNECTIONS
+            count = (MAX_CONNECTIONS - sockets.size) - 1
             addrs = @addrs[0..count]
             @addrs -= addrs
 
@@ -53,7 +57,7 @@ module GamespyQuery
             sockets = []
             next
           end
-          puts "Loop, Sockets: #{sockets.size}, AddrsLeft: #{@addrs.size}, ReadReady: #{"#{ready[0].size}, WriteReady: #{ready[1].size}, ExcReady: #{ready[2].size}" unless ready.nil?}"
+          puts "Loop, Sockets: #{sockets.size}, AddrsLeft: #{@addrs.size}, ReadReady: #{"#{ready[0].size} / #{read_sockets.size}, WriteReady: #{ready[1].size} / #{write_sockets.size}, ExcReady: #{ready[2].size} / #{exc_sockets.size}" unless ready.nil?}"
 
           # Read
           ready[0].each { |s| handle_read s, jar[s], sockets }
@@ -65,19 +69,6 @@ module GamespyQuery
           #ready[2].each { |s| handle_exc s, jar[s], sockets }
         end
       end
-      puts "Finished"
-
-      cool, dude = 0, 0
-      jar.each_pair do |k, v|
-        if v[:state] > 1
-          cool += 1
-        else
-          dude += 1
-        end
-        puts v.inspect
-      end
-      puts "Success: #{cool}, Failed: #{dude}"
-
 
       return jar
     end
@@ -202,12 +193,27 @@ end
 if $0 == __FILE__
   srv = File.open("servers.txt") { |f| f.read }
   addrs = []
-  srv.each_line do |line|
-    addrs << "#{$1}:#{$2}" if line =~ /([\d\.]+)[\s\t]*(\d+)/
-  end
+  srv.each_line { |line| addrs << "#{$1}:#{$2}" if line =~ /([\d\.]+)[\s\t]*(\d+)/ }
+
   # addrs = ["192.168.50.1:2356", "89.169.242.67:2302"]
   #addrs = ["95.156.228.83:2402"]
   #addrs = addrs[0..9]
-  sm = GamespyQuery::SocketMaster.new(addrs.reverse)
-  sm.process!
+
+  time_start = Time.now
+
+  sm = GamespyQuery::SocketMaster.new(addrs)
+  jar = sm.process!
+
+  cool, dude = 0, 0
+  jar.each_pair do |k, v|
+    if v[:state] >= 5
+      cool += 1
+    else
+      dude += 1
+    end
+    puts v.inspect
+  end
+  puts "Success: #{cool}, Failed: #{dude}"
+  time_taken = Time.now - time_start
+  puts "Took: #{time_taken}s"
 end
