@@ -15,7 +15,7 @@ module GamespyQuery
   
     module_function
     def logger
-      @logger ||= defined?(ActionController) ? ActionController::Base.logger || Logger.new("logger.log") : Logger.new("logger.log")
+      @logger ||= if defined?(::Tools); ::Tools.logger; else; defined?(ActionController) ? ActionController::Base.logger || Logger.new("logger.log") : Logger.new("logger.log"); end
     end
 
     def dbg_msg(e)

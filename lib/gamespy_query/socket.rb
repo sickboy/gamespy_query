@@ -10,22 +10,22 @@ module GamespyQuery
   # TODO
   module MultiSocket
     def create_socket(*params)
-      puts "Creating socket #{params}"
+      Tools.debug {"Creating socket #{params}"}
       _create_socket(*params)
     end
 
     def socket_send(*params)
-      puts "Sending socket #{params}"
+      Tools.debug {"Sending socket #{params}"}
       _socket_send(*params)
     end
 
     def socket_receive(*params)
-      puts "Receiving socket #{params}"
+      Tools.debug {"Receiving socket #{params}"}
       _socket_receive(*params)
     end
 
     def socket_close(*params)
-      puts "Closing socket #{params}"
+      Tools.debug {"Closing socket #{params}"}
       _socket_close(*params)
     end
 
