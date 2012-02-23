@@ -69,9 +69,7 @@ module GamespyQuery
       end
 
       # Parse player_data
-      unless player_data.empty?
-        data[:players] = parse_player_data(player_data)
-      end
+      data[:players] = parse_player_data(player_data)
 
       data
     end

@@ -26,7 +26,7 @@ module GamespyQuery
 
     def socket_close(*params)
       Tools.debug {"Closing socket #{params}"}
-      _socket_close(*params)
+      @s.close
     end
 
     if RUBY_PLATFORM =~ /mswin32/
@@ -48,10 +48,8 @@ module GamespyQuery
         @s.Receive(@ip_end_point)
       end
 
-      def _socket_close
-        @s.close
-      end
     else
+
       def _create_socket(host, port)
         @s = UDPSocket.new
         @s.connect(host, port)
@@ -67,22 +65,21 @@ module GamespyQuery
             @s.recvfrom(RECEIVE_SIZE)
           end
         rescue Timeout::Error
-          #socket_close
           raise TimeoutError
+        ensure
+          @s.close
         end
-      end
-
-      def _socket_close
-        @s.close
       end
     end
   end
 
   class Socket < UDPSocket
+    include Funcs
+
     DEFAULT_TIMEOUT = 3
     MAX_PACKETS = 7
 
-    ID_PACKET = [0x04, 0x05, 0x06, 0x07].pack("c*") # TODO: Randomize
+    ID_PACKET = [0x04, 0x05, 0x06, 0x07].pack("c*") # TODO: Randomize?
     BASE_PACKET = [0xFE, 0xFD, 0x00].pack("c*")
     CHALLENGE_PACKET = [0xFE, 0xFD, 0x09].pack("c*")
 
@@ -116,7 +113,6 @@ module GamespyQuery
 
     # TODO: Support pings
     # TODO: Handle .NET native sockets
-    include Funcs
     STATE_INIT, STATE_SENT_CHALLENGE, STATE_RECEIVED_CHALLENGE, STATE_SENT_CHALLENGE_RESPONSE, STATE_RECEIVE_DATA, STATE_READY = 0, 1, 2, 3, 4, 5
 
     attr_accessor :addr, :data, :state, :stamp, :needs_challenge, :max_packets, :failed
@@ -142,7 +138,7 @@ module GamespyQuery
         case self.state
           when STATE_INIT
             Tools.debug {"Write (0): #{self.inspect}"}
-            # Send Challenge
+            # Send Challenge request
             self.puts @packet
             self.state = STATE_SENT_CHALLENGE
           when STATE_RECEIVED_CHALLENGE
