@@ -68,10 +68,6 @@ module GamespyQuery
       include System::Net
       include System::Net::Sockets
 
-      def _get_string(str)
-        str.map {|e| e.chr}.join  #  begin; System::Text::Encoding.USASCII.GetString(reply[0]).to_s; rescue nil, Exception => e; Tools.log_exception(e); reply[0].map {|e| e.chr}.join; end
-      end
-
       def _create_socket(host, port)
         @ip_end_point = IPEndPoint.new(IPAddress.Any, 0)
         @s = UdpClient.new
