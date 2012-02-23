@@ -10,7 +10,7 @@ module GamespyQuery
     def process!
       jar = {}
       sockets = @addrs.map{|addr| s = UDPSocket.new; s.connect(*addr.split(":")); s }
-      sockets.each {|s| jar[s] = {data: [], state: 0, needs_challenge: false, max_packets: MAX_PACKETS, failed: false}}
+      sockets.each_with_index {|s, i| jar[s] = {addr: @addrs[i], data: [], state: 0, stamp: nil, needs_challenge: false, max_packets: MAX_PACKETS, failed: false}}
       # States:
       # 0 - Not begun
       # 1 - Sent Challenge
@@ -23,8 +23,10 @@ module GamespyQuery
       id_packet = ID_PACKET
       packet = CHALLENGE_PACKET + id_packet
 
+      timeout = 5
+
       while !sockets.empty? && ready = IO.select(sockets, sockets, sockets)
-        puts "YAY #{ready.inspect}"
+        #puts "YAY #{ready.inspect}"
 
         processed = []
 
@@ -32,12 +34,22 @@ module GamespyQuery
         ready[0].each do |s|
           entry = jar[s]
 
-          data = s.recvfrom(4096)
-          puts "Read: #{s.inspect}, #{entry}: #{data}"
+          begin
+            data = s.recvfrom(RECEIVE_SIZE)
+          rescue => e
+            puts "Error: #{e.message}, #{entry}"
+            entry[:failed] = true
+            sockets.delete s
+            s.close
+            next
+          end
+          #puts "Read: #{s.inspect}, #{entry}: #{data}"
           processed << s
+          entry[:stamp] = Time.now
 
           case entry[:state]
             when 1
+              puts "Read (1): #{entry}"
               # Receive challenge
               challenge = data[0]
               str = get_string(challenge)
@@ -52,6 +64,7 @@ module GamespyQuery
 
               entry[:state] = 2
             when 3, 4
+              puts "Read (3,4): #{entry}"
               entry[:state] = 4
 
               index = 0
@@ -74,6 +87,7 @@ module GamespyQuery
 
               if entry[:data].size >= entry[:max_packets] # OR we received the end-packet and all packets required
                 entry[:state] = 5
+                s.close
                 sockets.delete s
               end
           end
@@ -82,36 +96,69 @@ module GamespyQuery
         # Write
         (ready[1] - processed).each do |s|
           entry = jar[s]
-          puts "Write: #{s.inspect}, #{entry}"
+          #puts "Write: #{s.inspect}, #{entry}"
           processed << s
-          case entry[:state]
-            when 0
-              # Send Challenge
-              s.puts packet
-              entry[:state] = 1
-            when 2
-              # Send Challenge response
-              packet = entry[:needs_challenge] ? BASE_PACKET + id_packet + entry[:needs_challenge] + FULL_INFO_PACKET_MP : BASE_PACKET + id_packet + FULL_INFO_PACKET_MP
-              s.puts packet
-              entry[:state] = 3
+          begin
+            case entry[:state]
+              when 0
+                puts "Write (0): #{entry}"
+                # Send Challenge
+                s.puts packet
+                entry[:state] = 1
+                entry[:stamp] = Time.now
+              when 2
+                puts "Write (2): #{entry}"
+                # Send Challenge response
+                packet = entry[:needs_challenge] ? BASE_PACKET + id_packet + entry[:needs_challenge] + FULL_INFO_PACKET_MP : BASE_PACKET + id_packet + FULL_INFO_PACKET_MP
+                s.puts packet
+                entry[:state] = 3
+            end
+          rescue => e
+            puts "Error: #{e.message}, #{entry}"
+            entry[:failed] = true
+            sockets.delete s
+            s.close
+            next
           end
+
+          if Time.now - entry[:stamp] > 5
+            puts "TimedOut: #{entry}"
+            entry[:failed] = true
+            sockets.delete s
+            s.close
+          end
+
         end
 
         # Exceptions
         ready[2].each do |s|
           puts "Exception: #{s.inspect}"
+          s.close
           sockets.delete s
           entry = jar[s]
           entry[:failed] = true
         end
       end
       puts "Finished"
-      puts jar.inspect
+      jar.each_pair do |k, v|
+        puts v.inspect
+      end
+
+
+      return jar
     end
   end
 end
 
 if $0 == __FILE__
-  sm = GamespyQuery::SocketMaster.new(["192.168.50.1:2356"])
+  srv = File.open("/srv/samba/share/servers.txt") { |f| f.read }
+  addrs = []
+  srv.each_line do |line|
+    p line
+    addrs << "#{$1}:#{$2}" if line =~ /([\d\.]+)[\s\t]*(\d+)/
+  end
+  # addrs = ["192.168.50.1:2356", "89.169.242.67:2302"]
+  addrs = addrs[0..50]
+  sm = GamespyQuery::SocketMaster.new(addrs)
   sm.process!
 end

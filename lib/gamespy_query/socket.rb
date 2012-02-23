@@ -21,6 +21,8 @@ module GamespyQuery
     SERVER_INFO_PACKET = [0xFF, 0x00, 0x00].pack("c*")
     PLAYER_INFO_PACKET = [0x00, 0xFF, 0x00].pack("c*")
 
+    RECEIVE_SIZE = 1500
+
     STR_HOSTNAME = "hostname"
     STR_PLAYERS = "players"
     STR_DEATHS = "deaths_\x00\x00"
@@ -113,7 +115,7 @@ module GamespyQuery
       def _socket_receive
         begin
           Timeout::timeout(TIMEOUT) do
-            @s.recvfrom(4096)
+            @s.recvfrom(RECEIVE_SIZE)
           end
         rescue Timeout::Error
           #socket_close
