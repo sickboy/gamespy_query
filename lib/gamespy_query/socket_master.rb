@@ -34,23 +34,23 @@ module GamespyQuery
     # 4 - Receive DataPackets (max 7)
     # 5 - Ready
     def process!
-      jar = []
+      sockets = []
 
       until @addrs.empty?
         addrs = @addrs.shift @max_connections
-        sockets = addrs.map do |addr|
+        queue = addrs.map do |addr|
           s = Socket.new
           s.connect(*addr.split(":"))
           s.addr = addr
           s
         end
 
-        jar += sockets
+        sockets += queue
 
-        until sockets.empty?
+        until queue.empty?
           # Fill up the Sockets pool until max_conn
-          if FILL_UP_ON_SPACE && sockets.size < @max_connections
-            addrs = @addrs.shift (@max_connections - sockets.size)
+          if FILL_UP_ON_SPACE && queue.size < @max_connections
+            addrs = @addrs.shift (@max_connections - queue.size)
 
             socks = addrs.map do |addr|
               s = Socket.new
@@ -59,35 +59,35 @@ module GamespyQuery
               s
             end
 
+            queue += socks
             sockets += socks
-            jar += socks
           end
 
-          write_sockets, read_sockets = sockets.reject {|s| s.valid? }.partition {|s| [0, 2].include? s.state }
+          write_sockets, read_sockets = queue.reject {|s| s.valid? }.partition {|s| [0, 2].include? s.state }
 
           unless ready = IO.select(read_sockets, write_sockets, nil, @timeout)
             puts "Timeout, no usable sockets in current queue, within timeout period"
-            sockets.each{|s| s.close unless s.closed?}
-            sockets = []
+            queue.each{|s| s.close unless s.closed?}
+            queue = []
             next
           end
-          puts "Sockets: #{sockets.size}, AddrsLeft: #{@addrs.size}, ReadReady: #{"#{ready[0].size} / #{read_sockets.size}, WriteReady: #{ready[1].size} / #{write_sockets.size}, ExcReady: #{ready[2].size} / #{sockets.size}" unless ready.nil?}"
+          puts "Sockets: #{queue.size}, AddrsLeft: #{@addrs.size}, ReadReady: #{"#{ready[0].size} / #{read_sockets.size}, WriteReady: #{ready[1].size} / #{write_sockets.size}, ExcReady: #{ready[2].size} / #{queue.size}" unless ready.nil?}"
 
           # Read
-          ready[0].each { |s| handle_read s, sockets }
+          ready[0].each { |s| handle_read s, queue }
 
           # Write
-          ready[1].each { |s| handle_write s, sockets }
+          ready[1].each { |s| handle_write s, queue }
 
           # Exceptions
-          #ready[2].each { |s| handle_exc s, sockets }
+          #ready[2].each { |s| handle_exc s, queue }
         end
       end
 
-      return jar
+      return sockets
     end
 
-    def handle_read s, sockets
+    def handle_read s, queue
       case s.state
         when 1
           begin
@@ -101,7 +101,7 @@ module GamespyQuery
           rescue => e
             puts "Error: #{e.message}, #{s.inspect}"
             s.failed = true
-            sockets.delete s
+            queue.delete s
             s.close
           end
         when 3, 4
@@ -121,19 +121,19 @@ module GamespyQuery
             if s.data.size >= s.max_packets # OR we received the end-packet and all packets required
               puts "Received packet limit: #{s.inspect}"
               s.state = 5
-              sockets.delete s
+              queue.delete s
               s.close unless s.closed?
             end
           rescue => e
             puts "Error: #{e.message}, #{s.inspect}"
             s.failed = true
-            sockets.delete s
+            queue.delete s
             s.close
           end
       end
     end
 
-    def handle_write s, sockets
+    def handle_write s, queue
       #puts "Write: #{s.inspect}"
       begin
         case s.state
@@ -155,7 +155,7 @@ module GamespyQuery
       rescue => e
         puts "Error: #{e.message}, #{s.inspect}"
         s.failed = true
-        sockets.delete s
+        queue.delete s
         s.close
         return
       end
@@ -164,15 +164,15 @@ module GamespyQuery
       if Time.now - s.stamp > @timeout
         puts "TimedOut: #{s.inspect}"
         s.failed = true
-        sockets.delete s
+        queue.delete s
         s.close unless s.closed?
       end
 =end
     end
 
-    def handle_exc s, sockets
+    def handle_exc s, queue
       puts "Exception: #{s.inspect}"
-      sockets.delete s
+      queue.delete s
       s.close
       s.failed = true
     end
@@ -219,10 +219,10 @@ if $0 == __FILE__
   time_start = Time.now
 
   sm = GamespyQuery::SocketMaster.new(addrs)
-  jar = sm.process!
+  sockets = sm.process!
 
-  cool = jar.count {|v| v.valid? }
-  dude = jar.size - cool
+  cool = sockets.count {|v| v.valid? }
+  dude = sockets.size - cool
 
   puts "Success: #{cool}, Failed: #{dude}"
   time_taken = Time.now - time_start
