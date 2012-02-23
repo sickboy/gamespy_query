@@ -52,7 +52,7 @@ module GamespyQuery
             sockets += socks
           end
 
-          write_sockets, read_sockets = queue.reject {|s| s.valid? }.partition {|s| [0, 2].include? s.state }
+          write_sockets, read_sockets = queue.reject {|s| s.valid? }.partition {|s| [STATE_INIT, STATE_RECEIVED_CHALLENGE].include? s.state }
 
           unless ready = IO.select(read_sockets, write_sockets, nil, @timeout)
             puts "Timeout, no usable sockets in current queue, within timeout period"
