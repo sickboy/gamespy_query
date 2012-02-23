@@ -9,6 +9,14 @@ module GamespyQuery
 
     attr_accessor :timeout, :max_connections
 
+    class Socket < UDPSocket
+      attr_accessor :addr, :data, :state, :stamp, :needs_challenge, :max_packets, :failed
+      def data; @data ||= []; end
+      def state; @state ||= 0; end
+      def max_packets; @max_packets ||= MAX_PACKETS; end
+      def valid?; @state == 5; end
+    end
+
     def initialize addrs
       @addrs = addrs
       @id_packet = ID_PACKET
@@ -26,25 +34,36 @@ module GamespyQuery
     # 4 - Receive DataPackets (max 7)
     # 5 - Ready
     def process!
-      jar = {}
+      jar = []
 
       until @addrs.empty?
         addrs = @addrs.shift @max_connections
-        sockets = addrs.map{|addr| s = UDPSocket.new; s.connect(*addr.split(":")); s }
-        sockets.each_with_index {|s, i| jar[s] = {addr: addrs[i], data: [], state: 0, stamp: nil, needs_challenge: false, max_packets: MAX_PACKETS, failed: false}}
+        sockets = addrs.map do |addr|
+          s = Socket.new
+          s.connect(*addr.split(":"))
+          s.addr = addr
+          s
+        end
+
+        jar += sockets
 
         until sockets.empty?
           # Fill up the Sockets pool until max_conn
           if FILL_UP_ON_SPACE && sockets.size < @max_connections
             addrs = @addrs.shift (@max_connections - sockets.size)
 
-            socks = addrs.map{|addr| s = UDPSocket.new; s.connect(*addr.split(":")); s }
-            socks.each_with_index {|s, i| jar[s] = {addr: addrs[i], data: [], state: 0, stamp: nil, needs_challenge: false, max_packets: MAX_PACKETS, failed: false}}
+            socks = addrs.map do |addr|
+              s = Socket.new
+              s.connect(*addr.split(":"))
+              s.addr = addr
+              s
+            end
 
             sockets += socks
+            jar += socks
           end
 
-          write_sockets, read_sockets = sockets.select {|s| jar[s][:state]< 5 }.partition {|s| [0, 2].include? jar[s][:state] }
+          write_sockets, read_sockets = sockets.reject {|s| s.valid? }.partition {|s| [0, 2].include? s.state }
 
           unless ready = IO.select(read_sockets, write_sockets, nil, @timeout)
             puts "Timeout, no usable sockets in current queue, within timeout period"
@@ -55,111 +74,111 @@ module GamespyQuery
           puts "Sockets: #{sockets.size}, AddrsLeft: #{@addrs.size}, ReadReady: #{"#{ready[0].size} / #{read_sockets.size}, WriteReady: #{ready[1].size} / #{write_sockets.size}, ExcReady: #{ready[2].size} / #{sockets.size}" unless ready.nil?}"
 
           # Read
-          ready[0].each { |s| handle_read s, jar[s], sockets }
+          ready[0].each { |s| handle_read s, sockets }
 
           # Write
-          ready[1].each { |s| handle_write s, jar[s], sockets }
+          ready[1].each { |s| handle_write s, sockets }
 
           # Exceptions
-          #ready[2].each { |s| handle_exc s, jar[s], sockets }
+          #ready[2].each { |s| handle_exc s, sockets }
         end
       end
 
       return jar
     end
 
-    def handle_read s, entry, sockets
-      case entry[:state]
+    def handle_read s, sockets
+      case s.state
         when 1
           begin
             data = s.recvfrom_nonblock(RECEIVE_SIZE)
-            puts "Read (1): #{s.inspect}, #{entry}: #{data}"
-            entry[:stamp] = Time.now
+            puts "Read (1): #{s.inspect}: #{data}"
+            s.stamp = Time.now
 
-            handle_challenge entry, get_string(data[0])
+            handle_challenge s, get_string(data[0])
 
-            entry[:state] = 2
+            s.state = 2
           rescue => e
-            puts "Error: #{e.message}, #{entry}"
-            entry[:failed] = true
+            puts "Error: #{e.message}, #{s.inspect}"
+            s.failed = true
             sockets.delete s
             s.close
           end
         when 3, 4
           begin
             data = s.recvfrom_nonblock(RECEIVE_SIZE)
-            puts "Read (3,4): #{s.inspect}, #{entry}: #{data}"
-            entry[:stamp] = Time.now
-            entry[:state] = 4
+            puts "Read (3,4): #{s.inspect}: #{data}"
+            s.stamp = Time.now
+            s.state = 4
 
             game_data = get_string(data[0])
-            Tools.debug {"Received (#{entry[:data].size + 1}):\n\n#{game_data.inspect}\n\n#{game_data}\n\n"}
+            Tools.debug {"Received (#{s.data.size + 1}):\n\n#{game_data.inspect}\n\n#{game_data}\n\n"}
 
-            index = handle_splitnum entry, game_data
+            index = handle_splitnum s, game_data
 
-            entry[:data][index] = game_data
+            s.data[index] = game_data
 
-            if entry[:data].size >= entry[:max_packets] # OR we received the end-packet and all packets required
-              puts "Received packet limit: #{entry}"
-              entry[:state] = 5
+            if s.data.size >= s.max_packets # OR we received the end-packet and all packets required
+              puts "Received packet limit: #{s.inspect}"
+              s.state = 5
               sockets.delete s
               s.close unless s.closed?
             end
           rescue => e
-            puts "Error: #{e.message}, #{entry}"
-            entry[:failed] = true
+            puts "Error: #{e.message}, #{s.inspect}"
+            s.failed = true
             sockets.delete s
             s.close
           end
       end
     end
 
-    def handle_write s, entry, sockets
-      #puts "Write: #{s.inspect}, #{entry}"
+    def handle_write s, sockets
+      #puts "Write: #{s.inspect}"
       begin
-        case entry[:state]
+        case s.state
           when 0
-            puts "Write (0): #{entry}"
+            puts "Write (0): #{s.inspect}"
             # Send Challenge
             s.puts @packet
-            entry[:state] = 1
-            entry[:stamp] = Time.now
+            s.state = 1
+            s.stamp = Time.now
           when 2
-            puts "Write (2): #{entry}"
+            puts "Write (2): #{s.inspect}"
             # Send Challenge response
-            packet = entry[:needs_challenge] ? BASE_PACKET + @id_packet + entry[:needs_challenge] + FULL_INFO_PACKET_MP : BASE_PACKET + @id_packet + FULL_INFO_PACKET_MP
+            packet = s.needs_challenge ? BASE_PACKET + @id_packet + s.needs_challenge + FULL_INFO_PACKET_MP : BASE_PACKET + @id_packet + FULL_INFO_PACKET_MP
             s.puts packet
 
-            entry[:state] = 3
-            entry[:stamp] = Time.now
+            s.state = 3
+            s.stamp = Time.now
         end
       rescue => e
-        puts "Error: #{e.message}, #{entry}"
-        entry[:failed] = true
+        puts "Error: #{e.message}, #{s.inspect}"
+        s.failed = true
         sockets.delete s
         s.close
         return
       end
 
 =begin
-      if Time.now - entry[:stamp] > @timeout
-        puts "TimedOut: #{entry}"
-        entry[:failed] = true
+      if Time.now - s.stamp > @timeout
+        puts "TimedOut: #{s.inspect}"
+        s.failed = true
         sockets.delete s
         s.close unless s.closed?
       end
 =end
     end
 
-    def handle_exc s, entry, sockets
+    def handle_exc s, sockets
       puts "Exception: #{s.inspect}"
       sockets.delete s
       s.close
-      entry[:failed] = true
+      s.failed = true
     end
 
 
-    def handle_splitnum entry, game_data
+    def handle_splitnum s, game_data
       index = 0
       if game_data.sub(STR_GARBAGE, STR_EMPTY)[RX_SPLITNUM]
         splitnum = $1
@@ -167,22 +186,22 @@ module GamespyQuery
         index = (flag & 127).to_i
         last = flag & 0x80 > 0
         # Data could be received out of order, use the "index" id when "last" flag is true, to determine total packet_count
-        entry[:max_packets] = index + 1 if last # update the max
-        puts "Splitnum: #{splitnum.inspect} (#{splitnum}) (#{flag}, #{index}, #{last}) Max: #{entry[:max_packets]}"
+        s.max_packets = index + 1 if last # update the max
+        puts "Splitnum: #{splitnum.inspect} (#{splitnum}) (#{flag}, #{index}, #{last}) Max: #{s.max_packets}"
       else
-        entry[:max_packets] = 1
+        s.max_packets = 1
       end
 
       index
     end
 
-    def handle_challenge entry, str
+    def handle_challenge s, str
       #puts "Received challenge response (#{str.length}): #{str.inspect}"
       need_challenge = !(str.sub(STR_X0, STR_EMPTY) =~ RX_NO_CHALLENGE)
       if need_challenge
         str = str.sub(RX_CHALLENGE, STR_EMPTY).gsub(RX_CHALLENGE2, STR_EMPTY).to_i
         challenge_packet = sprintf(STR_BLA, handle_chr(str >> 24), handle_chr(str >> 16), handle_chr(str >> 8), handle_chr(str >> 0))
-        entry[:needs_challenge] = challenge_packet
+        s.needs_challenge = challenge_packet
       end
     end
   end
@@ -202,8 +221,8 @@ if $0 == __FILE__
   sm = GamespyQuery::SocketMaster.new(addrs)
   jar = sm.process!
 
-  dude = jar.values.count {|v| v[:state] < 5}
-  cool = jar.values.size - dude
+  cool = jar.count {|v| v.valid? }
+  dude = jar.size - cool
 
   puts "Success: #{cool}, Failed: #{dude}"
   time_taken = Time.now - time_start
