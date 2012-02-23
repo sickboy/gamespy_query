@@ -61,9 +61,10 @@ module GamespyQuery
 end
 
 if $0 == __FILE__
+  require_relative 'master'
   srv = File.open(ARGV[0] || "servers.txt") { |f| f.read }
-  addrs = []
-  srv.each_line { |line| addrs << "#{$1}:#{$2}" if line =~ /([\d\.]+)[\s\t]*(\d+)/ }
+  master = GamespyQuery::Master.new
+  addrs = master.get_server_list srv
 
   time_start = Time.now
 

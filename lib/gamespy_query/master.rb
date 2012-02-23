@@ -34,6 +34,15 @@ module GamespyQuery
       self.to_hash(self.read)
     end
 
+    def get_server_list list = nil
+      addrs = []
+      list = %x[gslist -n #{@game}] if list.nil?
+      list.split("\n").each do |line|
+        addrs << "#{$1}:#{$2}" if line =~ /([\d\.]+)[\s\t]*(\d+)/
+      end
+      addrs
+    end
+
     def read
       geo = @geo ? @geo : "-Q 11 "
       unless File.exists?(File.join(geoip_path, "GeoIP.dat"))
