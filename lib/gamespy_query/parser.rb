@@ -111,7 +111,7 @@ module GamespyQuery
 
       packet.split(STR_SPLIT).each_with_index do |data, index|
         if (index % 2) == 0
-          key = data
+          key = clean data
         else
           game_data[key] = data.is_a?(String) ? clean(data) : data
         end

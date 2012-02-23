@@ -273,10 +273,23 @@ module GamespyQuery
     end
 
     def fetch
+      pings = []
       r = self.data
       begin
         until valid?
-          handle_state ? handle_write : handle_read
+          if handle_state
+            if IO.select(nil, [self], nil, TIMEOUT)
+              handle_write
+            else
+              raise "TimeOut"
+            end
+          else
+            if IO.select([self], nil, nil, TIMEOUT)
+              handle_read
+            else
+              raise "TimeOut"
+            end
+          end
         end
         data.each_pair {|k, d| Tools.debug {"GSPY Infos: #{k} #{d.size}"} } unless @silent || !$debug
 
@@ -284,11 +297,11 @@ module GamespyQuery
         pings_c = 0
         pings.each { |ping| pings_c += ping }
 
-        ping = pings_c / pings.size
+        ping = pings.size == 0 ? nil : pings_c / pings.sizeha
         Tools.debug{"Gamespy pings: #{pings}, #{ping}"}
         @ping = ping
       rescue => e
-        puts "Error during fetch #{self.inspect}: #{e.message}"
+        STDOUT.puts "Error during fetch #{self.inspect}: #{e.message}"
         r = nil
       end
       r
@@ -297,9 +310,12 @@ module GamespyQuery
 end
 
 if $0 == __FILE__
-  host = ARGV[0]
-  port = ARGV[1]
-  g = GamespyQuery::Socket.new(host, port)
+  host, port = if ARGV.size > 1
+    ARGV
+               else
+    ARGV[0].split(":")
+  end
+  g = GamespyQuery::Socket.new("#{host}:#{port}")
   r = g.sync
   exit unless r
   puts r.to_yaml
