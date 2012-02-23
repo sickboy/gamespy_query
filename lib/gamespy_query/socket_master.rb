@@ -170,7 +170,7 @@ module GamespyQuery
 end
 
 if $0 == __FILE__
-  srv = File.open("/srv/samba/share/servers.txt") { |f| f.read }
+  srv = File.open("servers.txt") { |f| f.read }
   addrs = []
   srv.each_line do |line|
     p line
