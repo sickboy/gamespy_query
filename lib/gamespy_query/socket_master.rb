@@ -27,20 +27,16 @@ module GamespyQuery
     # 5 - Ready
     def process!
       jar = {}
-      max_connections_int = @max_connections - 1
 
       until @addrs.empty?
-        addrs = @addrs[0..max_connections_int]
-        @addrs -= addrs
+        addrs = @addrs.shift @max_connections
         sockets = addrs.map{|addr| s = UDPSocket.new; s.connect(*addr.split(":")); s }
         sockets.each_with_index {|s, i| jar[s] = {addr: addrs[i], data: [], state: 0, stamp: nil, needs_challenge: false, max_packets: MAX_PACKETS, failed: false}}
 
         until sockets.empty?
           # Fill up the Sockets pool until max_conn
           if FILL_UP_ON_SPACE && sockets.size < @max_connections
-            count = (@max_connections - sockets.size) - 1
-            addrs = @addrs[0..count]
-            @addrs -= addrs
+            addrs = @addrs.shift (@max_connections - sockets.size)
 
             socks = addrs.map{|addr| s = UDPSocket.new; s.connect(*addr.split(":")); s }
             socks.each_with_index {|s, i| jar[s] = {addr: addrs[i], data: [], state: 0, stamp: nil, needs_challenge: false, max_packets: MAX_PACKETS, failed: false}}
