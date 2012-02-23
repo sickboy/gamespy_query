@@ -36,8 +36,6 @@ module GamespyQuery
         sockets.each_with_index {|s, i| jar[s] = {addr: addrs[i], data: [], state: 0, stamp: nil, needs_challenge: false, max_packets: MAX_PACKETS, failed: false}}
 
         until sockets.empty?
-          read_sockets, write_sockets, exc_sockets = [], [], []
-
           # Fill up the Sockets pool until max_conn
           if FILL_UP_ON_SPACE && sockets.size < @max_connections
             count = (@max_connections - sockets.size) - 1
@@ -50,15 +48,15 @@ module GamespyQuery
             sockets += socks
           end
 
-          sockets.each {|s| unless jar[s][:state] >= 5; [0, 2].include?(jar[s][:state]) ? write_sockets << s : read_sockets << s; end }
-          #puts "Read: #{read_sockets.inspect}, Write: #{write_sockets.inspect}"
+          write_sockets, read_sockets = sockets.select {|s| jar[s][:state]< 5 }.partition {|s| [0, 2].include? jar[s][:state] }
+
           unless ready = IO.select(read_sockets, write_sockets, nil, @timeout)
             puts "Timeout, no usable sockets in current queue, within timeout period"
             sockets.each{|s| s.close unless s.closed?}
             sockets = []
             next
           end
-          puts "Loop, Sockets: #{sockets.size}, AddrsLeft: #{@addrs.size}, ReadReady: #{"#{ready[0].size} / #{read_sockets.size}, WriteReady: #{ready[1].size} / #{write_sockets.size}, ExcReady: #{ready[2].size} / #{exc_sockets.size}" unless ready.nil?}"
+          puts "Sockets: #{sockets.size}, AddrsLeft: #{@addrs.size}, ReadReady: #{"#{ready[0].size} / #{read_sockets.size}, WriteReady: #{ready[1].size} / #{write_sockets.size}, ExcReady: #{ready[2].size} / #{sockets.size}" unless ready.nil?}"
 
           # Read
           ready[0].each { |s| handle_read s, jar[s], sockets }
