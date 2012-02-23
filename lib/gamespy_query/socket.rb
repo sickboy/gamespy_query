@@ -295,7 +295,7 @@ module GamespyQuery
         pings_c = 0
         pings.each { |ping| pings_c += ping }
 
-        ping = pings.size == 0 ? nil : pings_c / pings.sizeha
+        ping = pings.size == 0 ? nil : pings_c / pings.size
         Tools.debug{"Gamespy pings: #{pings}, #{ping}"}
         @ping = ping
       rescue => e
