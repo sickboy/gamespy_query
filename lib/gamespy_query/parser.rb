@@ -10,7 +10,7 @@
 require_relative 'base'
 
 module GamespyQuery
-  class Parser
+  class Parser < Base
     STR_SPLIT = STR_X0
     STR_ID = "\x00\x04\x05\x06\a"
 
@@ -76,17 +76,6 @@ module GamespyQuery
       data
     end
 
-    if RUBY_PLATFORM =~ /mswin32/
-      def get_string(str)
-        System::Text::Encoding.UTF8.GetString(System::Array.of(System::Byte).new(str.bytes.to_a)).to_s
-      end
-    else
-      def get_string(str)
-        #(str + '  ').encode("UTF-8", :invalid => :replace, :undef => :replace)[0..-2]
-        str
-      end
-    end
-
     def clean_packet(packet)
       packet = packet.clone
       packet.sub!(STR_ID, STR_EMPTY) # Cut off the identity
@@ -99,7 +88,7 @@ module GamespyQuery
       get_string(packet)
     end
     
-    def clean(str)
+    def clean_string(str)
       str.encode("UTF-8", invalid: :replace, undef: :replace)
     end
 
@@ -111,9 +100,9 @@ module GamespyQuery
 
       packet.split(STR_SPLIT).each_with_index do |data, index|
         if (index % 2) == 0
-          key = clean data
+          key = clean_string data
         else
-          game_data[key] = data.is_a?(String) ? clean(data) : data
+          game_data[key] = data.is_a?(String) ? clean_string(data) : data
         end
       end
 
@@ -171,7 +160,7 @@ module GamespyQuery
           # Parse the data - \x00 is printed after a non-nil entry, otherwise \x00 means nil (e.g empty team)
           until str.empty?
             entry = str[RX_X0_SPEC]
-            player_data[player_data.keys[i]] << clean(entry.sub(STR_X0, STR_EMPTY))
+            player_data[player_data.keys[i]] << clean_string(entry.sub(STR_X0, STR_EMPTY))
             str.sub!(entry, STR_EMPTY)
           end
           

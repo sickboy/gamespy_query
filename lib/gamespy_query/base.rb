@@ -25,11 +25,14 @@ BackTrace: #{e.backtrace.join(CHAR_N) unless !e.respond_to?(:backtrace) || e.bac
 
 
     def log_exception(e, as_error = true, msg = "")
-      logger.error "#{"#{msg}:" unless msg.empty?}#{e.class} #{e.message}" if as_error
-
-      logger.debug dbg_msg(e)
+      if defined?(::Tools)
+        ::Tools.log_exception(e, as_error, msg)
+      else
+        puts "Error: #{e.class} #{e.message}, #{e.backtrace.join("\n")}"
+        logger.error "#{"#{msg}:" unless msg.empty?}#{e.class} #{e.message}" if as_error
+        logger.debug dbg_msg(e)
+      end
     end
-
 
     def debug(&block)
       return unless DEBUG
@@ -80,14 +83,14 @@ BackTrace: #{e.backtrace.join(CHAR_N) unless !e.respond_to?(:backtrace) || e.bac
       include System::Net
       include System::Net::Sockets
 
-      def _get_string(str)
-        str.map {|e| e.chr}.join  #  begin; System::Text::Encoding.USASCII.GetString(reply[0]).to_s; rescue nil, Exception => e; Tools.log_exception(e); reply[0].map {|e| e.chr}.join; end
+      def get_string(str)
+        System::Text::Encoding.UTF8.GetString(System::Array.of(System::Byte).new(str.bytes.to_a)).to_s # #  begin; System::Text::Encoding.USASCII.GetString(reply[0]).to_s; rescue nil, Exception => e; Tools.log_exception(e); reply[0].map {|e| e.chr}.join; end
       end
     else
       require 'socket'
       require 'timeout'
-
-      def _get_string(str)
+      def get_string(str)
+        #(str + '  ').encode("UTF-8", :invalid => :replace, :undef => :replace)[0..-2]
         str
       end
     end

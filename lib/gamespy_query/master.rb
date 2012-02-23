@@ -66,7 +66,7 @@ module GamespyQuery
         i = 0
         content.map! do |e|
           i += 1
-          i % 2 == 0 ? e : clean(e)
+          i % 2 == 0 ? e : clean_string(e)
         end
         addr = "#{ip}:#{port}"
         if @list.has_key?(addr)
