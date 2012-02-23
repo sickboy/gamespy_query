@@ -24,7 +24,7 @@ module GamespyQuery
         self.connect(*addr.split(":"))
       end
 
-      def state=(state); @state = state; @stamp = Time.now; end
+      def state=(state); @stamp = Time.now; @state = state; end
 
       def valid?; @state == STATE_READY; end
 
@@ -42,24 +42,22 @@ module GamespyQuery
             when STATE_RECEIVED_CHALLENGE
               STDOUT.puts "Write (2): #{self.inspect}"
               # Send Challenge response
-              packet = self.needs_challenge ? SocketMaster::BASE_PACKET + @id_packet + self.needs_challenge + SocketMaster::FULL_INFO_PACKET_MP : SocketMaster::BASE_PACKET + @id_packet + SocketMaster::FULL_INFO_PACKET_MP
-              self.puts packet
-
+              self.puts self.needs_challenge ? SocketMaster::BASE_PACKET + @id_packet + self.needs_challenge + SocketMaster::FULL_INFO_PACKET_MP : SocketMaster::BASE_PACKET + @id_packet + SocketMaster::FULL_INFO_PACKET_MP
               self.state = STATE_SENT_CHALLENGE_RESPONSE
           end
         rescue => e
           STDOUT.puts "Error: #{e.message}, #{self.inspect}"
           self.failed = true
           r = false
-          self.close
+          close
         end
 
 =begin
-      if Time.now - s.stamp > @timeout
-        STDOUT.puts "TimedOut: #{s.inspect}"
-        s.failed = true
+      if Time.now - self.stamp > @timeout
+        STDOUT.puts "TimedOut: #{self.inspect}"
+        self.failed = true
         r = false
-        s.close unless s.closed?
+        close unless closed?
       end
 =end
         r
@@ -82,7 +80,7 @@ module GamespyQuery
               STDOUT.puts "Error: #{e.message}, #{self.inspect}"
               self.failed = true
               r = false
-              self.close
+              close
             end
           when STATE_SENT_CHALLENGE_RESPONSE, STATE_RECEIVE_DATA
             begin
@@ -101,13 +99,13 @@ module GamespyQuery
                 STDOUT.puts "Received packet limit: #{self.inspect}"
                 self.state = STATE_READY
                 r = false
-                self.close unless self.closed?
+                close unless closed?
               end
             rescue => e
               STDOUT.puts "Error: #{e.message}, #{self.inspect}"
               self.failed = true
               r = false
-              self.close
+              close
             end
         end
         r
@@ -115,7 +113,7 @@ module GamespyQuery
 
       def handle_exc
         STDOUT.puts "Exception: #{self.inspect}"
-        self.close
+        close
         self.failed = true
 
         false
@@ -153,8 +151,7 @@ module GamespyQuery
     def initialize addrs
       @addrs = addrs
 
-      @timeout = DEFAULT_TIMEOUT # Per select iteration
-      @max_connections = DEFAULT_MAX_CONNECTIONS
+      @timeout, @max_connections = DEFAULT_TIMEOUT, DEFAULT_MAX_CONNECTIONS # Per select iteration
     end
 
     def process!
