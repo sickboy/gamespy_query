@@ -5,7 +5,7 @@ module GamespyQuery
     PARAMS = [:hostname, :gamever, :gametype, :gamemode, :numplayers, :maxplayers, :password, :equalModRequired, :mission, :mapname,
               :mod, :signatures, :verifysignatures, :gamestate, :dedicated, :platform, :sv_battleeye, :language, :difficulty]
 
-    # TODO: Gspy v3 multipacket
+    RX_ADDR_LINE = /([\d\.]+)[\s\t]*(\d+)/
 
     DELIMIT = case RUBY_PLATFORM
       when /-mingw32$/, /-mswin32$/
@@ -38,7 +38,7 @@ module GamespyQuery
       addrs = []
       list = %x[gslist -n #{@game}] if list.nil?
       list.split("\n").each do |line|
-        addrs << "#{$1}:#{$2}" if line =~ /([\d\.]+)[\s\t]*(\d+)/
+        addrs << "#{$1}:#{$2}" if line =~ RX_ADDR_LINE
       end
       addrs
     end

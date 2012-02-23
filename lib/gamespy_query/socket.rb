@@ -255,8 +255,8 @@ module GamespyQuery
     def handle_state; [STATE_INIT, STATE_RECEIVED_CHALLENGE].include? state; end
 
     # Supports challenge/response and multi-packet
-    def sync
-      game_data, key, reply = {}, nil, self.fetch
+    def sync reply = self.fetch
+      game_data, key = {}, nil
       return game_data if reply.nil?
 
       parser = Parser.new(reply)
