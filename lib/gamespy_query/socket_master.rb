@@ -53,7 +53,7 @@ module GamespyQuery
           sockets.each {|s| unless jar[s][:state] >= 5; [0, 2].include?(jar[s][:state]) ? write_sockets << s : read_sockets << s; end }
           #puts "Read: #{read_sockets.inspect}, Write: #{write_sockets.inspect}"
           unless ready = IO.select(read_sockets, write_sockets, nil, @timeout)
-            puts "Timeout, no usable sockets within timeout"
+            puts "Timeout, no usable sockets in current queue, within timeout period"
             sockets.each{|s| s.close unless s.closed?}
             sockets = []
             next
@@ -147,12 +147,14 @@ module GamespyQuery
         return
       end
 
+=begin
       if Time.now - entry[:stamp] > @timeout
         puts "TimedOut: #{entry}"
         entry[:failed] = true
         sockets.delete s
         s.close unless s.closed?
       end
+=end
     end
 
     def handle_exc s, entry, sockets
