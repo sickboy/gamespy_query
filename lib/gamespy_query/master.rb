@@ -5,7 +5,7 @@ module GamespyQuery
     PARAMS = [:hostname, :gamever, :gametype, :gamemode, :numplayers, :maxplayers, :password, :equalModRequired, :mission, :mapname,
               :mod, :signatures, :verifysignatures, :gamestate, :dedicated, :platform, :sv_battleeye, :language, :difficulty]
 
-    RX_ADDR_LINE = /([\d\.]+)[\s\t]*(\d+)/
+    RX_ADDR_LINE = /^[\s\t]*([\d\.]+)[\s\t:]*(\d+)[\s\t]*(.*)$/
 
     DELIMIT = case RUBY_PLATFORM
       when /-mingw32$/, /-mswin32$/
