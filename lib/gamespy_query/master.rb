@@ -29,9 +29,8 @@ module GamespyQuery
       @geo, @game = geo, game
     end
 
-    def process
-      @list = Hash.new
-      self.to_hash(self.read)
+    def process list = self.read
+      self.to_hash list
     end
 
     def get_params
@@ -68,6 +67,7 @@ module GamespyQuery
     RX_H = /\A([\.0-9]*):([0-9]*) *\\(.*)/
     STR_SPLIT = "\\"
     def to_hash(ar)
+      list = Hash.new
       ar.each_with_index do |entry, index|
         str = entry[RX_H]
         next unless str
@@ -80,13 +80,13 @@ module GamespyQuery
           i % 2 == 0 ? e : clean_string(e)
         end
         addr = "#{ip}:#{port}"
-        if @list.has_key?(addr)
-          e = @list[addr]
+        if list.has_key?(addr)
+          e = list[addr]
         else
           e = Hash.new
           e[:ip] = ip
           e[:port] = port
-          @list[addr] = e
+          list[addr] = e
         end
         if e[:gamedata]
           e[:gamedata].merge!(Hash[*content])
@@ -94,7 +94,7 @@ module GamespyQuery
           e[:gamedata] = Hash[*content]
         end
       end
-      @list
+      list
     end
   end
 end
