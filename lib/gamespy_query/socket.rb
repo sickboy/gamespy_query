@@ -253,7 +253,7 @@ module GamespyQuery
     # Supports challenge/response and multi-packet
     def sync reply = self.fetch
       game_data, key = {}, nil
-      return game_data if reply.nil?
+      return game_data if reply.nil? || reply.empty?
 
       parser = Parser.new(reply)
       data = parser.parse

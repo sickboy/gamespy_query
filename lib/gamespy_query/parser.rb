@@ -135,7 +135,7 @@ module GamespyQuery
             # This will add the broken info header to the previous info list (name for team, team for score, score for deaths)
             # However the resulting arrays are limited to num_players, so the info is discared anyway.
             # TODO: Cleaner implementation!
-            data =~ /(^|[^\x01])#{str}_\x00\x00/ ? STR_X0 : :"#{str}_\x00\x00"
+            data =~ /(^|[^\x01])#{Regexp.escape(str)}_\x00\x00/ ? STR_X0 : :"#{str}_\x00\x00"
           else
             STR_SIX_X0
           end
