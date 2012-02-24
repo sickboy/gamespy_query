@@ -34,24 +34,35 @@ module GamespyQuery
       self.to_hash(self.read)
     end
 
-    def get_server_list list = nil
+    def get_params
+      PARAMS.clone.map{|e| "#{DELIMIT}#{e}"}.join("")
+    end
+
+    def get_server_list list = nil, include_data = false, geo = nil
       addrs = []
-      list = %x[gslist -n #{@game}] if list.nil?
-      list.split("\n").each do |line|
-        addrs << "#{$1}:#{$2}" if line =~ RX_ADDR_LINE
+      list = %x[gslist -p "#{geoip_path}"#{" #{geo}-X #{get_params}" if include_data} -n #{@game}] if list.nil?
+      if include_data
+        addrs = handle_data(list, geo)
+      else
+        list.split("\n").each do |line|
+          addrs << "#{$1}:#{$2}" if line =~ RX_ADDR_LINE
+        end
       end
       addrs
     end
 
     def read
       geo = @geo ? @geo : "-Q 11 "
-      unless File.exists?(File.join(geoip_path, "GeoIP.dat"))
+      unless geo.nil? || geo.empty? || File.exists?(File.join(geoip_path, "GeoIP.dat"))
         Tools.logger.warn "Warning: GeoIP.dat database missing. Can't parse countries. #{geoip_path}"
         geo = nil
       end
-      reply = %x[gslist -p "#{geoip_path}" -n #{@game} #{geo}-X #{PARAMS.clone.map{|e| "#{DELIMIT}#{e}"}.join("")}]
-      reply.gsub!("\\\\\\", "") if geo
-      reply.split("\n")
+      get_server_list(nil, true, geo)
+    end
+
+    def handle_data(reply, geo = nil)
+      reply = reply.gsub("\\\\\\", "") if geo
+      reply.split("\n").select{|line| line =~ RX_ADDR_LINE }
     end
 
     RX_H = /\A([\.0-9]*):([0-9]*) *\\(.*)/
@@ -86,4 +97,10 @@ module GamespyQuery
       @list
     end
   end
+end
+
+if $0 == __FILE__
+  master = GamespyQuery::Master.new
+  r = master.read
+  puts r
 end
