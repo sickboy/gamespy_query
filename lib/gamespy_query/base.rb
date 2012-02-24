@@ -68,6 +68,10 @@ BackTrace: #{e.backtrace.join(CHAR_N) unless !e.respond_to?(:backtrace) || e.bac
       end
     end
 
+    def clean_string(str)
+      str.encode("UTF-8", invalid: :replace, undef: :replace)
+    end
+
     def handle_chr(number)
       number = ((number % 256)+256) if number < 0
       number = number % 256 if number > 255

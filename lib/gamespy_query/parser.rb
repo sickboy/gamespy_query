@@ -86,11 +86,7 @@ module GamespyQuery
       get_string(packet)
     end
     
-    def clean_string(str)
-      str.encode("UTF-8", invalid: :replace, undef: :replace)
-    end
-
-    def parse_game_data(packet)
+   def parse_game_data(packet)
       Tools.debug {"Game Parsing #{packet.inspect}"}
 
       key = nil
