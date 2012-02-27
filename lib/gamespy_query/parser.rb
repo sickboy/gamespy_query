@@ -34,8 +34,8 @@ module GamespyQuery
     end
 
     # Returns Hash with parsed data (:game and :players)
-    # :game => Hash, Key: InfoKey, Value: InfoValue
-    # :players => Hash, Key: InfoType, Value: Array of Values
+    # game: Hash, Key: InfoKey, Value: InfoValue
+    # players: Hash, Key: InfoType, Value: Array of Values
     def parse
       data = {}
       data[:game] = {} # Key: InfoKey, Value: InfoValue
@@ -116,7 +116,7 @@ module GamespyQuery
     def parse_player_data(packet)
       Tools.debug {"Player Parsing #{packet.inspect}"}
 
-      player_data = {:names => [], :teams => [], :scores => [], :deaths => []} # [[], [], [], []]
+      player_data = {names: [], teams: [], scores: [], deaths: []} # [[], [], [], []]
 
       return player_data if packet.nil? || packet.empty?
 

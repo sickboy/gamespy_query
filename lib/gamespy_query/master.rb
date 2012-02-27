@@ -86,6 +86,7 @@ module GamespyQuery
           e = Hash.new
           e[:ip] = ip
           e[:port] = port
+          e[:gamename] = @game
           list[addr] = e
         end
         if e[:gamedata]

@@ -94,7 +94,7 @@ BackTrace: #{e.backtrace.join(CHAR_N) unless !e.respond_to?(:backtrace) || e.bac
       require 'socket'
       require 'timeout'
       def get_string(str)
-        #(str + '  ').encode("UTF-8", :invalid => :replace, :undef => :replace)[0..-2]
+        #(str + '  ').encode("UTF-8", invalid: :replace, undef: :replace)[0..-2]
         str
       end
     end
