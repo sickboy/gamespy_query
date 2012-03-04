@@ -1,5 +1,3 @@
-require_relative 'base'
-
 module GamespyQuery
   # Provides access to the Gamespy Master browser
   class Master < Base
