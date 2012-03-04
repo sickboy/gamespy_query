@@ -10,6 +10,7 @@
 require_relative 'base'
 
 module GamespyQuery
+  # Parsing gamespy query packets and processing them to Hash
   class Parser < Base
     STR_SPLIT = STR_X0
     STR_ID = "\x00\x04\x05\x06\a"
