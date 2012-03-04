@@ -7,6 +7,8 @@ module GamespyQuery
   autoload :Funcs, "gamespy_query/base"
   autoload :Tools, "gamespy_query/base"
 
+  autoload :Options, "gamespy_query/options"
+
   autoload :Parser, "gamespy_query/parser"
   autoload :Socket, "gamespy_query/socket"
   autoload :MultiSocket, "gamespy_query/socket"
