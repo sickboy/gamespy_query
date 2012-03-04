@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+
+require 'gamespy_query'
+
+# Parse commandline arguments
+options = GamespyQuery::MasterOptions.parse
