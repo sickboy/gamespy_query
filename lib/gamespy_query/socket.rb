@@ -171,6 +171,8 @@ module GamespyQuery
             # Send Challenge response
             self.puts self.needs_challenge ? BASE_PACKET + @id_packet + self.needs_challenge + FULL_INFO_PACKET_MP : BASE_PACKET + @id_packet + FULL_INFO_PACKET_MP
             self.state = STATE_SENT_CHALLENGE_RESPONSE
+          else
+            raise "NotInWriteState"
         end
       rescue => e
         Tools.log_exception e
@@ -195,23 +197,16 @@ module GamespyQuery
       # Tools.debug {"Read: #{self.inspect}, #{self.state}"}
 
       r = true
-      case self.state
-        when STATE_SENT_CHALLENGE
-          begin
+      begin
+        case self.state
+          when STATE_SENT_CHALLENGE
             data = self.recvfrom_nonblock(RECEIVE_SIZE)
             Tools.debug {"Read (1): #{self.inspect}: #{data}"}
 
             handle_challenge get_string(data[0])
 
             self.state = STATE_RECEIVED_CHALLENGE
-          rescue => e
-            Tools.log_exception e
-            self.failed = true
-            r = false
-            close unless closed?
-          end
-        when STATE_SENT_CHALLENGE_RESPONSE, STATE_RECEIVE_DATA
-          begin
+          when STATE_SENT_CHALLENGE_RESPONSE, STATE_RECEIVE_DATA
             data = self.recvfrom_nonblock(RECEIVE_SIZE)
             Tools.debug {"Read (3,4): #{self.inspect}: #{data}"}
             self.state = STATE_RECEIVE_DATA
@@ -229,12 +224,14 @@ module GamespyQuery
               r = false
               close unless closed?
             end
-          rescue => e
-            Tools.log_exception(e)
-            self.failed = true
-            r = false
-            close unless closed?
-          end
+          else
+            raise "NotInReadState"
+        end
+      rescue => e
+        Tools.log_exception(e)
+        self.failed = true
+        r = false
+        close unless closed?
       end
       r
     end
