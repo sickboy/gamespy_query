@@ -51,7 +51,6 @@ module GamespyQuery
       # Parse the packets
       @packets.each do |packet|
         packet = clean_packet(packet)
-
         if player_info
           # Player header was found before, add packet to player_data
           player_data += packet
