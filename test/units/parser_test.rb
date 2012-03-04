@@ -30,10 +30,10 @@ context "Parser" do
       asserts("Score data, first element") { topic.parse[:players][:scores][0] }.equals "371"
       asserts("Deaths data, first element") { topic.parse[:players][:deaths][0] }.equals "24"
 
-      asserts("Name data") { topic.parse[:players][:names][10] }.equals "DrHat"
-      asserts("Team data") { topic.parse[:players][:teams][10] }.equals ""
-      asserts("Score data") { topic.parse[:players][:scores][10] }.equals "37"
-      asserts("Deaths data") { topic.parse[:players][:deaths][10] }.equals "8"
+      asserts("Name data, tenth element") { topic.parse[:players][:names][10] }.equals "DrHat"
+      asserts("Team data, tenth element") { topic.parse[:players][:teams][10] }.equals ""
+      asserts("Score data, tenth element") { topic.parse[:players][:scores][10] }.equals "37"
+      asserts("Deaths data, tenth element") { topic.parse[:players][:deaths][10] }.equals "8"
     end
   end
 end
