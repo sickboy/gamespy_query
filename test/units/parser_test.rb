@@ -29,15 +29,19 @@ context "Parser" do
       denies("Scores") { topic[:scores] }.empty
       denies("Deaths") { topic[:deaths] }.empty
 
-      asserts("Name data, first element") { topic[:names][0] }.equals "Skilllos"
-      asserts("Team data, first element") { topic[:teams][0] }.equals ""
-      asserts("Score data, first element") { topic[:scores][0] }.equals 371
-      asserts("Deaths data, first element") { topic[:deaths][0] }.equals 24
+      context "First element" do
+        asserts("Name") { topic[:names][0] }.equals "Skilllos"
+        asserts("Team") { topic[:teams][0] }.equals ""
+        asserts("Score") { topic[:scores][0] }.equals 371
+        asserts("Deaths") { topic[:deaths][0] }.equals 24
+      end
 
-      asserts("Name data, tenth element") { topic[:names][10] }.equals "DrHat"
-      asserts("Team data, tenth element") { topic[:teams][10] }.equals ""
-      asserts("Score data, tenth element") { topic[:scores][10] }.equals 37
-      asserts("Deaths data, tenth element") { topic[:deaths][10] }.equals 8
+      context "Tenth element" do
+        asserts("Name") { topic[:names][10] }.equals "DrHat"
+        asserts("Team") { topic[:teams][10] }.equals ""
+        asserts("Score") { topic[:scores][10] }.equals 37
+        asserts("Deaths") { topic[:deaths][10] }.equals 8
+      end
     end
   end
 end
