@@ -62,7 +62,15 @@ module GamespyQuery
           opts.separator ""
           opts.separator "Specific options:"
 
+          opts.on("-l", "--list",
+              "Fetch gamespy server list") do
+            options.tasks << :list
+          end
 
+          opts.on("-p", "--process",
+                  "Fetch gamespy server list and present as hash") do
+            options.tasks << :process
+          end
 
           # Boolean switch.
           opts.on("-v", "--[no-]verbose", "Run verbosely") do |v|

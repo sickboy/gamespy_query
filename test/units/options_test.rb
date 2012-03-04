@@ -38,5 +38,9 @@ context "MasterOptions" do
     # TODO: How to test the exit properly?
     asserts("version") { mock(GamespyQuery::MasterOptions).exit { 0 }; topic.parse(["--version"])} #.equals 0
     asserts("help") { mock(GamespyQuery::MasterOptions).exit { 0 }; topic.parse(["--help"]) } #.equals 0
+
+    asserts("list") { topic.parse(["--list"]).tasks }.same_elements [:list]
+
+    asserts("process") { topic.parse(["--process"]).tasks }.same_elements [:process]
   end
 end
