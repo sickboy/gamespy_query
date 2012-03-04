@@ -1,4 +1,4 @@
 require 'rubygems'
-require 'six_gamespy'
+require 'gamespy_query'
 require 'riot'
 require 'riot/rr'
