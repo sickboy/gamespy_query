@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+# This binary is mostly intended for testing gamespy_query socket implementation
+
 require 'gamespy_query'
 
 # Parse commandline arguments
