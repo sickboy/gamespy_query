@@ -1,11 +1,4 @@
 require 'teststrap'
-
-context "Options" do
-  setup { GamespyQuery::Options }
-
-end
-
-require 'teststrap'
 require 'ostruct'
 
 context "Options" do
@@ -25,8 +18,6 @@ context "Options" do
       # TODO: How to test the exit properly?
       asserts("version") { mock(GamespyQuery::Options).exit { 0 }; topic.parse(["--version"])} #.equals 0
       asserts("help") { mock(GamespyQuery::Options).exit { 0 }; topic.parse(["--help"]) } #.equals 0
-
-      #asserts("init") { topic.parse(["--init"]).tasks }.same_elements [[:init, Dir.pwd]]
     end
   end
 end
