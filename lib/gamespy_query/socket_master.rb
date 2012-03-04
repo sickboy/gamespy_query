@@ -1,18 +1,30 @@
 require_relative 'socket'
 
 module GamespyQuery
+  # Provides mass processing of Gamespy UDP sockets, by using Socket/IO select
   class SocketMaster < Base
+    # Should the current queue be extended to the maximum amount of connections, or should the queue be emptied first,
+    # before adding more?
     FILL_UP_ON_SPACE = true
+
+    # Default maximum concurrent connections
     DEFAULT_MAX_CONNECTIONS = 128
 
-    attr_accessor :timeout, :max_connections
+    # Configurable timeout in seconds
+    attr_accessor :timeout
 
+    # Configurable max concurrenct connections
+    attr_accessor :max_connections
+
+    # Initializes the object
+    # @param [Array] addrs List of addresses to process
     def initialize addrs
       @addrs = addrs
 
       @timeout, @max_connections = Socket::DEFAULT_TIMEOUT, DEFAULT_MAX_CONNECTIONS # Per select iteration
     end
 
+    # Process the list of addresses
     def process!
       sockets = []
 

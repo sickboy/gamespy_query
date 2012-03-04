@@ -7,23 +7,28 @@ require_relative 'parser'
 require 'socket'
 
 module GamespyQuery
+  # Provides socket functionality on multiple platforms
   # TODO
   module MultiSocket
+    # Create socket
     def create_socket(*params)
       Tools.debug {"Creating socket #{params}"}
       _create_socket(*params)
     end
 
+    # Write socket
     def socket_send(*params)
       Tools.debug {"Sending socket #{params}"}
       _socket_send(*params)
     end
 
+    # Read socket
     def socket_receive(*params)
       Tools.debug {"Receiving socket #{params}"}
       _socket_receive(*params)
     end
 
+    # Close socket
     def socket_close(*params)
       Tools.debug {"Closing socket #{params}"}
       @s.close
@@ -33,6 +38,7 @@ module GamespyQuery
       include System::Net
       include System::Net::Sockets
 
+      # Create socket
       def _create_socket(host, port)
         @ip_end_point = IPEndPoint.new(IPAddress.Any, 0)
         @s = UdpClient.new
@@ -40,25 +46,30 @@ module GamespyQuery
         @s.connect(host, port.to_i)
       end
 
+      # Write socket
       def _socket_send(packet)
         @s.Send(packet, packet.length)
       end
 
+      # Read socket
       def _socket_receive
         @s.Receive(@ip_end_point)
       end
 
     else
 
+      # Create socket
       def _create_socket(host, port)
         @s = UDPSocket.new
         @s.connect(host, port)
       end
 
+      # Write socket
       def _socket_send(packet)
         @s.puts(packet)
       end
 
+      # Read socket
       def _socket_receive
         begin
           Timeout::timeout(DEFAULT_TIMEOUT) do
@@ -73,12 +84,20 @@ module GamespyQuery
     end
   end
 
+  # Provides direct connection functionality to gamespy enabled game servers
+  # This query contains up to 7x more information than the gamespy master browser query
+  # For example, player lists with info (teams, scores, deaths) are only available by using direct connection
   class Socket < UDPSocket
     include Funcs
 
+    # Default timeout per connection state
     DEFAULT_TIMEOUT = 3
+
+    # Maximum amount of packets sent by the server
+    # This is a limit set by gamespy
     MAX_PACKETS = 7
 
+    # Packet bits
     ID_PACKET = [0x04, 0x05, 0x06, 0x07].pack("c*") # TODO: Randomize?
     BASE_PACKET = [0xFE, 0xFD, 0x00].pack("c*")
     CHALLENGE_PACKET = [0xFE, 0xFD, 0x09].pack("c*")
@@ -88,6 +107,7 @@ module GamespyQuery
     SERVER_INFO_PACKET = [0xFF, 0x00, 0x00].pack("c*")
     PLAYER_INFO_PACKET = [0x00, 0xFF, 0x00].pack("c*")
 
+    # Maximum receive size
     RECEIVE_SIZE = 1500
 
     STR_HOSTNAME = "hostname"
@@ -117,6 +137,9 @@ module GamespyQuery
 
     attr_accessor :addr, :data, :state, :stamp, :needs_challenge, :max_packets, :failed
 
+    # Initializes the object
+    # @param [String] addr Server address ("ip:port")
+    # @param [Address Family] address_family
     def initialize(addr, address_family = ::Socket::AF_INET)
       @addr, @data, @state, @max_packets = addr, {}, 0, MAX_PACKETS
       @id_packet = ID_PACKET
@@ -126,10 +149,14 @@ module GamespyQuery
       self.connect(*addr.split(":"))
     end
 
+    # Sets the state of the socket
+    # @param [Integer] state State to set
     def state=(state); @stamp = Time.now; @state = state; end
 
+    # Is the socket state valid? Only if all states have passed
     def valid?; @state == STATE_READY; end
 
+    # Handle the write state
     def handle_write
       #Tools.debug {"Write: #{self.inspect}, #{self.state}"}
 
@@ -165,6 +192,7 @@ module GamespyQuery
       r
     end
 
+    # Handle the read state
     def handle_read
       # Tools.debug {"Read: #{self.inspect}, #{self.state}"}
 
@@ -213,6 +241,8 @@ module GamespyQuery
       r
     end
 
+    # Handle the exception state
+    # TODO
     def handle_exc
       Tools.debug {"Exception: #{self.inspect}"}
       close unless closed?
@@ -221,9 +251,11 @@ module GamespyQuery
       false
     end
 
-    def handle_splitnum game_data
+    # Process the splitnum provided in the packet
+    # @param [String] packet Packet data
+    def handle_splitnum packet
       index = 0
-      if game_data.sub(STR_GARBAGE, STR_EMPTY)[RX_SPLITNUM]
+      if packet.sub(STR_GARBAGE, STR_EMPTY)[RX_SPLITNUM]
         splitnum = $1
         flag = splitnum.unpack("C")[0]
         index = (flag & 127).to_i
@@ -238,19 +270,24 @@ module GamespyQuery
       index
     end
 
-    def handle_challenge str
-      # Tools.debug{"Received challenge response (#{str.length}): #{str.inspect}"}
-      need_challenge = !(str.sub(STR_X0, STR_EMPTY) =~ RX_NO_CHALLENGE)
+    # Handle the challenge/response, if the server requires it
+    # @param [String] packet Packet to process for challenge/response
+    def handle_challenge packet
+      # Tools.debug{"Received challenge response (#{packet.length}): #{packet.inspect}"}
+      need_challenge = !(packet.sub(STR_X0, STR_EMPTY) =~ RX_NO_CHALLENGE)
       if need_challenge
-        str = str.sub(RX_CHALLENGE, STR_EMPTY).gsub(RX_CHALLENGE2, STR_EMPTY).to_i
+        str = packet.sub(RX_CHALLENGE, STR_EMPTY).gsub(RX_CHALLENGE2, STR_EMPTY).to_i
         challenge_packet = sprintf(STR_BLA, handle_chr(str >> 24), handle_chr(str >> 16), handle_chr(str >> 8), handle_chr(str >> 0))
         self.needs_challenge = challenge_packet
       end
     end
 
+    # Determine Read/Write/Exception state
     def handle_state; [STATE_INIT, STATE_RECEIVED_CHALLENGE].include? state; end
 
+    # Process data
     # Supports challenge/response and multi-packet
+    # @param [String] reply Reply from server
     def sync reply = self.fetch
       game_data, key = {}, nil
       return game_data if reply.nil? || reply.empty?
@@ -266,6 +303,7 @@ module GamespyQuery
       game_data
     end
 
+    # Fetch all packets from socket
     def fetch
       pings = []
       r = self.data

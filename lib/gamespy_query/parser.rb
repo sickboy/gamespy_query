@@ -18,7 +18,8 @@ module GamespyQuery
     RX_PLAYER_HEADER = /\x01/
     RX_END = /\x00\x02$/
 
-    # packets:
+    # Initializes the object
+    # @param [Hash or Array] packets
     #   - Hash, key: packetID, value: packetDATA
     #   or
     #   - Array, packetDATA ordered already by packetID
@@ -33,9 +34,10 @@ module GamespyQuery
       end
     end
 
+    # Parse game and player data to hash
     # Returns Hash with parsed data (:game and :players)
-    # game: Hash, Key: InfoKey, Value: InfoValue
-    # players: Hash, Key: InfoType, Value: Array of Values
+    # game Key: InfoKey, Value: InfoValue
+    # players Key: InfoType, Value: Array of Values
     def parse
       data = {}
       data[:game] = {} # Key: InfoKey, Value: InfoValue
@@ -74,6 +76,8 @@ module GamespyQuery
       data
     end
 
+    # Clean packet from useless data
+    # @param [String] packet Packet data
     def clean_packet(packet)
       packet = packet.clone
       packet.sub!(STR_ID, STR_EMPTY) # Cut off the identity
@@ -85,8 +89,10 @@ module GamespyQuery
       # Encoding
       get_string(packet)
     end
-    
-   def parse_game_data(packet)
+
+    # Parse game data in packet
+    # @param [String] packet Packet to parse
+    def parse_game_data(packet)
       Tools.debug {"Game Parsing #{packet.inspect}"}
 
       key = nil
@@ -112,6 +118,8 @@ module GamespyQuery
     STR_SIX = "$SIX_OVERWRITE_PREVIOUS$"
     STR_SIX_X0 = "\x00#{STR_SIX}\x00"
 
+    # Parse player data in packet
+    # @param [String] packet Packet to parse
     # TODO: Cleanup
     def parse_player_data(packet)
       Tools.debug {"Player Parsing #{packet.inspect}"}
@@ -182,7 +190,8 @@ module GamespyQuery
       player_data
     end
 
-    # Hash of Hashes
+    # Convert player data to Hash of Hashes
+    # @param [Hash] data Original player data split over 4 arrays in hash (:names, :teams, :scores, :deaths)
     def self.pretty_player_data(data)
       player_data = {}
 
@@ -196,7 +205,8 @@ module GamespyQuery
       player_data
     end
 
-    # Array of Hashes
+    # Convert player data to Array of Hashes
+    # @param [Hash] data Original player data split over 4 arrays in hash (:names, :teams, :scores, :deaths)
     def self.pretty_player_data2(data)
       player_data = []
 

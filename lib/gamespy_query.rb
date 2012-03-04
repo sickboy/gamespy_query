@@ -1,11 +1,14 @@
 require_relative "gamespy_query/version"
+
 require_relative "gamespy_query/base"
 require_relative "gamespy_query/socket"
 require_relative "gamespy_query/socket_master"
 require_relative "gamespy_query/master"
 
+# GamespyQuery provides access to GameSpy master server (through gslist utility)
+# and to GameSpy enabled game servers directly through UDPSocket.
 module GamespyQuery
-  # Your code goes here...
+
 end
 
 
