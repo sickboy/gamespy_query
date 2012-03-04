@@ -10,30 +10,34 @@ context "Parser" do
   asserts("Packets assigned") { topic.packets }.same_elements DEFAULT_DATA
 
   context "Parsed Output" do
-    context "Game Data" do
-      denies("Game data") { topic.parse[:game] }.empty
+    setup { topic.parse }
 
-      asserts("gamever") { topic.parse[:game]["gamever"] }.equals "1.59.79548"
-      asserts("sv_battleye") { topic.parse[:game]["sv_battleye"] }.equals "1"
+    context "Game Data" do
+      setup { topic[:game] }
+      denies("Game data") { topic }.empty
+
+      asserts("gamever") { topic["gamever"] }.equals "1.59.79548"
+      asserts("sv_battleye") { topic["sv_battleye"] }.equals "1"
     end
 
     context "Players data" do
-      denies("Players data") { topic.parse[:players] }.empty
+      setup { topic[:players] }
+      denies("Players data") { topic }.empty
 
-      denies("Names") { topic.parse[:players][:names] }.empty
-      denies("Teams") { topic.parse[:players][:teams] }.empty
-      denies("Scores") { topic.parse[:players][:scores] }.empty
-      denies("Deaths") { topic.parse[:players][:deaths] }.empty
+      denies("Names") { topic[:names] }.empty
+      denies("Teams") { topic[:teams] }.empty
+      denies("Scores") { topic[:scores] }.empty
+      denies("Deaths") { topic[:deaths] }.empty
 
-      asserts("Name data, first element") { topic.parse[:players][:names][0] }.equals "Skilllos"
-      asserts("Team data, first element") { topic.parse[:players][:teams][0] }.equals ""
-      asserts("Score data, first element") { topic.parse[:players][:scores][0] }.equals "371"
-      asserts("Deaths data, first element") { topic.parse[:players][:deaths][0] }.equals "24"
+      asserts("Name data, first element") { topic[:names][0] }.equals "Skilllos"
+      asserts("Team data, first element") { topic[:teams][0] }.equals ""
+      asserts("Score data, first element") { topic[:scores][0] }.equals "371"
+      asserts("Deaths data, first element") { topic[:deaths][0] }.equals "24"
 
-      asserts("Name data, tenth element") { topic.parse[:players][:names][10] }.equals "DrHat"
-      asserts("Team data, tenth element") { topic.parse[:players][:teams][10] }.equals ""
-      asserts("Score data, tenth element") { topic.parse[:players][:scores][10] }.equals "37"
-      asserts("Deaths data, tenth element") { topic.parse[:players][:deaths][10] }.equals "8"
+      asserts("Name data, tenth element") { topic[:names][10] }.equals "DrHat"
+      asserts("Team data, tenth element") { topic[:teams][10] }.equals ""
+      asserts("Score data, tenth element") { topic[:scores][10] }.equals "37"
+      asserts("Deaths data, tenth element") { topic[:deaths][10] }.equals "8"
     end
   end
 end
