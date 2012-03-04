@@ -5,9 +5,8 @@ require 'gamespy_query'
 # Parse commandline arguments
 options = GamespyQuery::MasterOptions.parse
 
-# TODO: Options..
-geo = nil
-game = "arma2oapc"
+game = options.argv[0] || "arma2oapc"
+geo = options.argv[1] && options.argv[1] == "true" ? nil : ""
 
 options.tasks.each do |t|
   opts = {}
@@ -21,7 +20,7 @@ options.tasks.each do |t|
   case task
     when :list
       master = GamespyQuery::Master.new(geo, game)
-      list = master.get_server_list(nil, true, geo)
+      list = master.read
       puts list
     when :process
       master = GamespyQuery::Master.new(geo, game)

@@ -23,7 +23,7 @@ module GamespyQuery
       # Parser definition
       def _parse options
         OptionParser.new do |opts|
-          opts.banner = "Usage: #{$0} [options] ip:port"
+          opts.banner = "Usage: #{$0} ip:port [options]"
           opts.separator ""
           opts.separator "Specific options:"
 
@@ -65,7 +65,7 @@ module GamespyQuery
       # Parser definition
       def _parse options
         OptionParser.new do |opts|
-          opts.banner = "Usage: #{$0} [options]"
+          opts.banner = "Usage: #{$0} [GAME] [GEO] [options]"
           opts.separator ""
           opts.separator "Specific options:"
 
