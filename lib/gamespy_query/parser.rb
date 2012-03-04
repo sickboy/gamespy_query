@@ -18,6 +18,9 @@ module GamespyQuery
     RX_PLAYER_HEADER = /\x01/
     RX_END = /\x00\x02$/
 
+    # Packets to process
+    attr_reader :packets
+
     # Initializes the object
     # @param [Hash or Array] packets
     #   - Hash, key: packetID, value: packetDATA
