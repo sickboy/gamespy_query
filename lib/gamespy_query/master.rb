@@ -13,17 +13,11 @@ module GamespyQuery
         "\\\\"
     end
 
-    # Get geoip_path
-    def geoip_path
-      return File.join(Dir.pwd, "config") unless defined?(Rails)
+    # Geo settings
+    attr_reader :geo
 
-      case RUBY_PLATFORM
-      when /-mingw32$/, /-mswin32$/
-        File.join(Rails.root, "config").gsub("/", "\\")
-      else
-        File.join(Rails.root, "config")
-      end
-    end
+    # Game
+    attr_reader :game
 
     # Initializes the instance
     # @param [String] geo Geo string
@@ -115,6 +109,19 @@ module GamespyQuery
         end
       end
       list
+    end
+
+
+    # Get geoip_path
+    def geoip_path
+      return File.join(Dir.pwd, "config") unless defined?(Rails)
+
+      case RUBY_PLATFORM
+        when /-mingw32$/, /-mswin32$/
+          File.join(Rails.root, "config").gsub("/", "\\")
+        else
+          File.join(Rails.root, "config")
+      end
     end
   end
 end
