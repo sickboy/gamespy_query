@@ -7,8 +7,6 @@
  Gamedata values are not split, Player lists can be (names, teams, scores, deaths), while individual values still are not.
 =end
 
-require_relative 'base'
-
 module GamespyQuery
   # Parsing gamespy query packets and processing them to Hash
   class Parser < Base
