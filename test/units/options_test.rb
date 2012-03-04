@@ -12,16 +12,21 @@ context "Options" do
   context "Parser" do
     setup { GamespyQuery::Options }
 
-    asserts("returns an OpenStruct") { topic.parse.is_a?(OpenStruct) }
-    asserts("tasks is Array") { topic.parse.tasks.is_a?(Array) }
+    context "Default params" do
+      setup { topic.parse }
+      asserts("returns an OpenStruct") { topic.is_a?(OpenStruct) }
+      asserts("tasks is Array") { topic.tasks.is_a?(Array) }
+    end
 
-    asserts("verbose") { topic.parse(["-v"]).verbose }.equals true
-    asserts("no-verbose") { topic.parse(["--no-verbose"]).verbose }.equals false
+    context "Specific params" do
+      asserts("verbose") { topic.parse(["-v"]).verbose }.equals true
+      asserts("no-verbose") { topic.parse(["--no-verbose"]).verbose }.equals false
 
-    # TODO: How to test the exit properly?
-    asserts("version") { mock(GamespyQuery::Options).exit { 0 }; topic.parse(["--version"])} #.equals 0
-    asserts("help") { mock(GamespyQuery::Options).exit { 0 }; topic.parse(["--help"]) } #.equals 0
+      # TODO: How to test the exit properly?
+      asserts("version") { mock(GamespyQuery::Options).exit { 0 }; topic.parse(["--version"])} #.equals 0
+      asserts("help") { mock(GamespyQuery::Options).exit { 0 }; topic.parse(["--help"]) } #.equals 0
 
-    #asserts("init") { topic.parse(["--init"]).tasks }.same_elements [[:init, Dir.pwd]]
+      #asserts("init") { topic.parse(["--init"]).tasks }.same_elements [[:init, Dir.pwd]]
+    end
   end
 end
