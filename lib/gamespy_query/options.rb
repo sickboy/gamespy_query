@@ -13,6 +13,9 @@ module GamespyQuery
 
         _parse(options).parse!(args)
 
+        options.argv = args.clone
+        args.clear
+
         options
       end
 
@@ -20,11 +23,15 @@ module GamespyQuery
       # Parser definition
       def _parse options
         OptionParser.new do |opts|
-          opts.banner = "Usage: #{$0} [options]"
+          opts.banner = "Usage: #{$0} [options] ip:port"
           opts.separator ""
           opts.separator "Specific options:"
 
-
+          opts.on("-s", "--sync",
+                  "Perform sync operation") do
+            #dir = "127.0.0.1:2302" if dir.nil?
+            options.tasks << :sync
+          end
 
 
           # Boolean switch.

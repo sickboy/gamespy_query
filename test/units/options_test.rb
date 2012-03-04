@@ -18,6 +18,9 @@ context "Options" do
       # TODO: How to test the exit properly?
       asserts("version") { mock(GamespyQuery::Options).exit { 0 }; topic.parse(["--version"])} #.equals 0
       asserts("help") { mock(GamespyQuery::Options).exit { 0 }; topic.parse(["--help"]) } #.equals 0
+
+      asserts("sync tasks") { topic.parse(["--sync", "127.0.0.1:2302"]).tasks }.same_elements [:sync]
+      asserts("sync argv") { topic.parse(["--sync", "127.0.0.1:2302"]).argv }.same_elements ["127.0.0.1:2302"]
     end
   end
 end
