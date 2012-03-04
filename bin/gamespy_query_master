@@ -1,0 +1,30 @@
+#!/usr/bin/env ruby
+
+require 'gamespy_query'
+
+# Parse commandline arguments
+options = GamespyQuery::MasterOptions.parse
+
+game = options.argv[0] || "arma2oapc"
+geo = options.argv[1] && options.argv[1] == "true" ? nil : ""
+
+options.tasks.each do |t|
+  opts = {}
+  task = if t.is_a?(Array)
+    opts = t[1]
+    t[0]
+  else
+    t
+  end
+
+  case task
+    when :list
+      master = GamespyQuery::Master.new(geo, game)
+      list = master.read
+      puts list
+    when :process
+      master = GamespyQuery::Master.new(geo, game)
+      process = master.process
+      puts process
+  end
+end

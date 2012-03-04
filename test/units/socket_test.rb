@@ -30,6 +30,7 @@ context "Socket" do
   asserts("fetch") { topic.fetch }
 
   asserts("sync") { topic.sync }
+
   context "Sync custom" do
     setup { topic.sync(DEFAULT_DATA) }
     asserts("Is a hash") { topic }.is_a?(Hash)
