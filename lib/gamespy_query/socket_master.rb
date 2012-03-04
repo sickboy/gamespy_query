@@ -1,5 +1,3 @@
-require_relative 'socket'
-
 module GamespyQuery
   # Provides mass processing of Gamespy UDP sockets, by using Socket/IO select
   class SocketMaster < Base
