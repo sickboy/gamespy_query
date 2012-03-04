@@ -7,9 +7,8 @@
  Gamedata values are not split, Player lists can be (names, teams, scores, deaths), while individual values still are not.
 =end
 
-require_relative 'base'
-
 module GamespyQuery
+  # Parsing gamespy query packets and processing them to Hash
   class Parser < Base
     STR_SPLIT = STR_X0
     STR_ID = "\x00\x04\x05\x06\a"
@@ -17,6 +16,9 @@ module GamespyQuery
     RX_SPLITNUM = /^splitnum\x00(.)/i
     RX_PLAYER_HEADER = /\x01/
     RX_END = /\x00\x02$/
+
+    # Packets to process
+    attr_reader :packets
 
     # Initializes the object
     # @param [Hash or Array] packets
@@ -48,7 +50,6 @@ module GamespyQuery
       # Parse the packets
       @packets.each do |packet|
         packet = clean_packet(packet)
-
         if player_info
           # Player header was found before, add packet to player_data
           player_data += packet

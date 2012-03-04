@@ -2,8 +2,6 @@
 # GameSpy query class by Sickboy [Patrick Roza] (sb_at_dev-heaven.net)
 
 require 'yaml'
-require_relative 'base'
-require_relative 'parser'
 require 'socket'
 
 module GamespyQuery

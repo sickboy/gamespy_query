@@ -24,8 +24,10 @@ module GamespyQuery
     # Create debug message from Exception
     # @param [Exception] e Exception to create debug message from
     def dbg_msg(e)
-      "#{e.class}: #{e.message if e.respond_to?(:backtrace)}
-BackTrace: #{e.backtrace.join(CHAR_N) unless !e.respond_to?(:backtrace) || e.backtrace.nil?}"
+      <<STR
+#{e.class}: #{e.message if e.respond_to?(:backtrace)}
+BackTrace: #{e.backtrace.join(CHAR_N) unless !e.respond_to?(:backtrace) || e.backtrace.nil?}
+STR
     end
 
     # Log exception
@@ -36,7 +38,7 @@ BackTrace: #{e.backtrace.join(CHAR_N) unless !e.respond_to?(:backtrace) || e.bac
       if defined?(::Tools)
         ::Tools.log_exception(e, as_error, msg)
       else
-        puts "Error: #{e.class} #{e.message}, #{e.backtrace.join("\n")}"
+        puts "Error: #{e.class} #{e.message}, #{e.backtrace.join("\n") unless e.backtrace.nil? }"
         logger.error "#{"#{msg}:" unless msg.empty?}#{e.class} #{e.message}" if as_error
         logger.debug dbg_msg(e)
       end
@@ -114,7 +116,7 @@ BackTrace: #{e.backtrace.join(CHAR_N) unless !e.respond_to?(:backtrace) || e.bac
 
       # Get UTF-8 string from string
       # @param [String] str
-      def get_string(str)
+      def _get_string(str)
         System::Text::Encoding.UTF8.GetString(System::Array.of(System::Byte).new(str.bytes.to_a)).to_s # #  begin; System::Text::Encoding.USASCII.GetString(reply[0]).to_s; rescue nil, Exception => e; Tools.log_exception(e); reply[0].map {|e| e.chr}.join; end
       end
     else
@@ -123,14 +125,14 @@ BackTrace: #{e.backtrace.join(CHAR_N) unless !e.respond_to?(:backtrace) || e.bac
 
       # Get UTF-8 string from string
       # @param [String] str
-      def get_string(str)
-        #(str + '  ').encode("UTF-8", invalid: :replace, undef: :replace)[0..-2]
-        str
+      def _get_string(str)
+        # str
+        (str + '  ').encode("UTF-8", invalid: :replace, undef: :replace)[0..-2]
       end
     end
   end
 
-  # Base class
+  # Base class from which all others derrive
   class Base
     include Funcs
   end
