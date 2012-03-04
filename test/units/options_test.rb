@@ -21,3 +21,8 @@ context "Options" do
     end
   end
 end
+
+context "MasterOptions" do
+  setup { GamespyQuery::MasterOptions }
+
+end
