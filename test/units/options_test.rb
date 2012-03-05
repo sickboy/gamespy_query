@@ -45,5 +45,6 @@ context "MasterOptions" do
     asserts("list") { topic.parse(["--list"]).tasks }.same_elements [:list]
 
     asserts("process") { topic.parse(["--process"]).tasks }.same_elements [:process]
+    asserts("process_master") { topic.parse(["--process_master"]).tasks }.same_elements [:process_master]
   end
 end

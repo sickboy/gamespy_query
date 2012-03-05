@@ -5,7 +5,13 @@ context "SocketMaster" do
       "127.0.0.1:2302",
       "127.0.0.1:2306"
   ]
-  setup { GamespyQuery::SocketMaster.new DEFAULT_ADDRS }
+  setup { GamespyQuery::SocketMaster }
 
-  asserts("Process") { topic.process! }.size 2
+  context "Instance" do
+    setup { topic.new DEFAULT_ADDRS }
+    asserts("Process") { topic.process! }.size 2
+  end
+
+
+  asserts("Process master") { topic.process_master }.is_a?(Array)
 end

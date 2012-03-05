@@ -28,5 +28,8 @@ options.tasks.each do |t|
       master = GamespyQuery::Master.new(geo, game)
       process = master.process
       puts process
+    when :process_master
+      process = GamespyQuery::SocketMaster.process_master(game, geo)
+      puts process
   end
 end

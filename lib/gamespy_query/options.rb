@@ -79,6 +79,11 @@ module GamespyQuery
             options.tasks << :process
           end
 
+          opts.on("-m", "--process_master",
+                  "Fetch gamespy server list, connect with udpsockets to get player data, and present as hash") do
+            options.tasks << :process_master
+          end
+
           # Boolean switch.
           opts.on("-v", "--[no-]verbose", "Run verbosely") do |v|
             options.verbose = v

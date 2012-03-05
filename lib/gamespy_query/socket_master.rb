@@ -66,6 +66,42 @@ module GamespyQuery
 
       return sockets
     end
+
+    class <<self
+      # Fetch the gamespy master browser list
+      # Connect to each individual server to receive player data etc
+      # @param [String] game Game to fetch info from
+      # @param [String] geo Geo location enabled?
+      # @param [Array] remote Hostname and path+filename strings if the list needs to be fetched from http server
+      def process_master(game = "arma2oapc", geo = nil, remote = nil)
+        master = GamespyQuery::Master.new(geo, game)
+        list = if remote
+                 Net::HTTP.start(remote[0]) do |http|
+                   resp = http.get(remote[1])
+                   resp.body.split("\n")
+                 end
+               else
+                 master.get_server_list(nil, true, geo)
+               end
+
+        dat = master.process list
+
+        sm = GamespyQuery::SocketMaster.new(dat.keys)
+        sockets = sm.process!
+        sockets.select{|s| s.valid? }.each do |s|
+          begin
+            data = dat[s.addr]
+            data[:ip], data[:port] = s.addr.split(":")
+            data[:gamename] = game
+            data[:gamedata].merge!(s.sync(s.data))
+          rescue => e
+            puts "#{e.message}, #{e.backtrace.join("\n")}"
+          end
+        end
+
+        dat.values
+      end
+    end
   end
 end
 
