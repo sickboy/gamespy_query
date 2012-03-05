@@ -1,4 +1,4 @@
-require 'optparse'
+require 'slop'
 require 'ostruct'
 
 module GamespyQuery
@@ -11,7 +11,7 @@ module GamespyQuery
         options = OpenStruct.new
         options.tasks = []
 
-        _parse(options).parse!(args)
+        options.options = _parse(args, options)
 
         options.argv = args.clone
         args.clear
@@ -21,40 +21,22 @@ module GamespyQuery
 
       private
       # Parser definition
-      def _parse options
-        OptionParser.new do |opts|
-          opts.banner = "Usage: #{$0} ip:port [options]"
-          opts.separator ""
-          opts.separator "Specific options:"
+      def _parse args, options
+        opts = Slop.parse!(args, {help: true, strict: true}) do
+          banner "Usage: #{$0} ip:port [options]"
 
-          opts.on("-s", "--sync",
-                  "Perform sync operation") do
-            #dir = "127.0.0.1:2302" if dir.nil?
+          on :s, :sync, 'Perform sync operation' do
             options.tasks << :sync
           end
 
+          on :v, :verbose, 'Enable verbose mode'
 
-          # Boolean switch.
-          opts.on("-v", "--[no-]verbose", "Run verbosely") do |v|
-            options.verbose = v
-          end
-
-          opts.separator ""
-          opts.separator "Common options:"
-
-          # No argument, shows at tail.  This will print an options summary.
-          # Try it and see!
-          opts.on_tail("-h", "--help", "Show this message") do
-            puts opts
-            exit
-          end
-
-          # Another typical switch to print the version.
-          opts.on_tail("--version", "Show version") do
+          on :version, 'Show version' do
             puts GamespyQuery::VERSION
-            exit
           end
         end
+
+        opts
       end
     end
   end
@@ -63,48 +45,30 @@ module GamespyQuery
     class <<self
       private
       # Parser definition
-      def _parse options
-        OptionParser.new do |opts|
-          opts.banner = "Usage: #{$0} [GAME] [GEO] [options]"
-          opts.separator ""
-          opts.separator "Specific options:"
+      def _parse args, options
+        opts = Slop.parse!(args, {help: true, strict: true}) do
+          banner "Usage: #{$0} [GAME] [GEO] [options]"
 
-          opts.on("-l", "--list",
-              "Fetch gamespy server list") do
+          on :l, :list, 'Fetch gamespy server list' do
             options.tasks << :list
           end
 
-          opts.on("-p", "--process",
-                  "Fetch gamespy server list and present as hash") do
+          on :p, :process, 'Fetch gamespy server list and present as hash' do
             options.tasks << :process
           end
 
-          opts.on("-m", "--process_master",
-                  "Fetch gamespy server list, connect with udpsockets to get player data, and present as hash") do
+          on :m, :process_master, 'Fetch gamespy server list, connect with udpsockets to get player data, and present as hash' do
             options.tasks << :process_master
           end
 
-          # Boolean switch.
-          opts.on("-v", "--[no-]verbose", "Run verbosely") do |v|
-            options.verbose = v
-          end
+          on :v, :verbose, 'Enable verbose mode'
 
-          opts.separator ""
-          opts.separator "Common options:"
-
-          # No argument, shows at tail.  This will print an options summary.
-          # Try it and see!
-          opts.on_tail("-h", "--help", "Show this message") do
-            puts opts
-            exit
-          end
-
-          # Another typical switch to print the version.
-          opts.on_tail("--version", "Show version") do
+          on :version, 'Show version' do
             puts GamespyQuery::VERSION
-            exit
           end
         end
+
+        opts
       end
     end
   end

@@ -12,15 +12,17 @@ context "Options" do
     end
 
     context "Specific params" do
-      asserts("verbose") { topic.parse(["-v"]).verbose }.equals true
-      asserts("no-verbose") { topic.parse(["--no-verbose"]).verbose }.equals false
+      asserts("no-verbose") { topic.parse([]).options.verbose? }.equals false
+      asserts("verbose") { topic.parse(["-v"]).options.verbose? }.equals true
 
       # TODO: How to test the exit properly?
-      asserts("version") { mock(GamespyQuery::Options).exit { 0 }; topic.parse(["--version"])} #.equals 0
-      asserts("help") { mock(GamespyQuery::Options).exit { 0 }; topic.parse(["--help"]) } #.equals 0
+      asserts("version") { topic.parse(["--version"]) } #.equals 0
+      asserts("help") { topic.parse(["--help"]) } #.equals 0
 
-      asserts("sync tasks") { topic.parse(["--sync", "127.0.0.1:2302"]).tasks }.same_elements [:sync]
-      asserts("sync argv") { topic.parse(["--sync", "127.0.0.1:2302"]).argv }.same_elements ["127.0.0.1:2302"]
+      asserts("empty argv") { topic.parse(["-v"]).argv }.same_elements []
+
+      asserts("sync tasks") { topic.parse(["127.0.0.1:2302", "--sync"]).tasks }.same_elements [:sync]
+      asserts("sync argv") { topic.parse(["127.0.0.1:2302", "--sync"]).argv }.same_elements ["127.0.0.1:2302"]
     end
   end
 end
@@ -35,12 +37,12 @@ context "MasterOptions" do
   end
 
   context "Specific params" do
-    asserts("verbose") { topic.parse(["-v"]).verbose }.equals true
-    asserts("no-verbose") { topic.parse(["--no-verbose"]).verbose }.equals false
+    asserts("no-verbose") { topic.parse([]).options.verbose? }.equals false
+    asserts("verbose") { topic.parse(["-v"]).options.verbose? }.equals true
 
     # TODO: How to test the exit properly?
-    asserts("version") { mock(GamespyQuery::MasterOptions).exit { 0 }; topic.parse(["--version"])} #.equals 0
-    asserts("help") { mock(GamespyQuery::MasterOptions).exit { 0 }; topic.parse(["--help"]) } #.equals 0
+    asserts("version") { topic.parse(["--version"])} #.equals 0
+    asserts("help") { topic.parse(["--help"]) } #.equals 0
 
     asserts("list") { topic.parse(["--list"]).tasks }.same_elements [:list]
 
