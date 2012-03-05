@@ -38,6 +38,7 @@ context "MasterOptions" do
   context "Specific params" do
     asserts("no-verbose") { topic.parse([]).options.verbose? }.equals false
     asserts("verbose") { topic.parse(["-v"]).options.verbose? }.equals true
+    asserts("empty argv") { topic.parse(["-v"]).argv }.same_elements []
 
     # TODO: How to test the exit properly?
     asserts("version") { topic.parse(["--version"])} #.equals 0
