@@ -14,12 +14,11 @@ context "Options" do
     context "Specific params" do
       asserts("no-verbose") { topic.parse([]).options.verbose? }.equals false
       asserts("verbose") { topic.parse(["-v"]).options.verbose? }.equals true
+      asserts("empty argv") { topic.parse(["-v"]).argv }.same_elements []
 
       # TODO: How to test the exit properly?
       asserts("version") { topic.parse(["--version"]) } #.equals 0
       asserts("help") { topic.parse(["--help"]) } #.equals 0
-
-      asserts("empty argv") { topic.parse(["-v"]).argv }.same_elements []
 
       asserts("sync tasks") { topic.parse(["127.0.0.1:2302", "--sync"]).tasks }.same_elements [:sync]
       asserts("sync argv") { topic.parse(["127.0.0.1:2302", "--sync"]).argv }.same_elements ["127.0.0.1:2302"]
