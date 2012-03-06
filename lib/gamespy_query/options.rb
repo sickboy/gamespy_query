@@ -8,7 +8,7 @@ module GamespyQuery
       # Parse given args
       # @param [Array] args Parse given args
       def parse args = ARGV
-        _parse(options).run(args)
+        _parse.run(args)
       end
 
       # Defaults for options
@@ -22,7 +22,7 @@ module GamespyQuery
 
       private
       # Parser definition
-      def _parse options
+      def _parse
         #root_command = Cri::Command.new_basic_root # Bug with h self.help -> cmd.help etc
         root_command = Cri::Command.define do
           name        'gamespy_query'
@@ -38,7 +38,7 @@ module GamespyQuery
 
           subcommand Cri::Command.new_basic_help
 
-          flag nil, :version, 'Show version' do |value, cmd|
+          option nil, :version, 'Show version' do |value, cmd|
             puts GamespyQuery.product_version
             exit 0
           end
@@ -73,12 +73,12 @@ module GamespyQuery
           end
         end
 
-        root_command.add_command _parse_master_command(options)
+        root_command.add_command _parse_master_command
 
         root_command
       end
 
-      def _parse_master_command options
+      def _parse_master_command
         master_command = Cri::Command.define do
           name    'master'
           usage   'master COMMAND [options]'

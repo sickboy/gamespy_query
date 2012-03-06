@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-# This binary is mostly intended for testing gamespy_query socket implementation
+# This binary is mostly intended for testing gamespy_query implementation
 
 require 'gamespy_query'
 
