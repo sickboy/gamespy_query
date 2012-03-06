@@ -1,4 +1,4 @@
-require 'slop'
+require 'cri'
 require 'ostruct'
 
 module GamespyQuery
@@ -11,7 +11,8 @@ module GamespyQuery
         options = OpenStruct.new
         options.tasks = []
 
-        options.options = _parse(args, options)
+        root_command = _parse(options)
+        root_command.run(args)
 
         options.argv = args.clone
         args.clear
@@ -21,54 +22,91 @@ module GamespyQuery
 
       private
       # Parser definition
-      def _parse args, options
-        opts = Slop.parse!(args, {help: true, strict: true}) do
-          banner "Usage: #{$0} ip:port [options]"
+      def _parse options
+        #root_command = Cri::Command.new_basic_root # Bug with h self.help -> cmd.help etc
+        root_command = Cri::Command.define do
+          name        'gamespy_query'
+          usage       'gamespy_query [options]'
+          summary     'Gamespy Protocol'
+          description 'This command provides the basic functionality'
 
-          on :s, :sync, 'Perform sync operation' do
-            options.tasks << :sync
+
+          option :h, :help, 'show help for this command' do |value, cmd|
+            puts cmd.help
+            exit 0
           end
 
-          on :v, :verbose, 'Enable verbose mode'
+          subcommand Cri::Command.new_basic_help
 
-          on :version, 'Show version' do
-            puts GamespyQuery::VERSION
+          flag nil, :version, 'Show version' do |value, cmd|
+            puts GamespyQuery.product_version
+            exit 0
+          end
+
+          flag :v, :verbose, 'Verbose'
+        end
+
+        root_command.define_command do
+          name    'sync'
+          usage   'sync ip:port [options]'
+          summary 'Sync data'
+          aliases :s
+
+          run do |opts, args, cmd|
+            puts "Running Sync, #{opts}, #{args}, #{cmd}"
+            options.tasks << [:sync, args[0] || Dir.pwd]
           end
         end
 
-        opts
+        root_command.add_command _parse_master_command(options)
+
+        root_command
       end
-    end
-  end
 
-  class MasterOptions < Options
-    class <<self
-      private
-      # Parser definition
-      def _parse args, options
-        opts = Slop.parse!(args, {help: true, strict: true}) do
-          banner "Usage: #{$0} [GAME] [GEO] [options]"
+      def _parse_master_command options
+        master_command = Cri::Command.define do
+          name    'master'
+          usage   'master COMMAND [options]'
+          aliases :m
 
-          on :l, :list, 'Fetch gamespy server list' do
+          subcommand Cri::Command.new_basic_help
+
+          run do |opts, args, cmd|
+            puts "Running Master, #{opts}, #{args}, #{cmd}"
+          end
+        end
+
+        master_command.define_command do
+          name 'list'
+          usage 'list [options]'
+          aliases :l
+
+          run do |opts, args, cmd|
             options.tasks << :list
           end
+        end
 
-          on :p, :process, 'Fetch gamespy server list and present as hash' do
+        master_command.define_command do
+          name 'process'
+          usage 'process [options]'
+          aliases :p
+
+          run do |opts, args, cmd|
             options.tasks << :process
-          end
-
-          on :m, :process_master, 'Fetch gamespy server list, connect with udpsockets to get player data, and present as hash' do
-            options.tasks << :process_master
-          end
-
-          on :v, :verbose, 'Enable verbose mode'
-
-          on :version, 'Show version' do
-            puts GamespyQuery::VERSION
           end
         end
 
-        opts
+        master_command.define_command do
+          name 'process_master'
+          usage 'process_master [options]'
+          aliases :m
+
+          run do |opts, args, cmd|
+            options.tasks << :process_master
+          end
+        end
+
+        master_command
       end
     end
   end
