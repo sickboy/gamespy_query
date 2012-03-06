@@ -8,16 +8,16 @@ module GamespyQuery
       # Parse given args
       # @param [Array] args Parse given args
       def parse args = ARGV
-        options = OpenStruct.new
-        options.tasks = []
+        _parse(options).run(args)
+      end
 
-        root_command = _parse(options)
-        root_command.run(args)
-
-        options.argv = args.clone
-        args.clear
-
-        options
+      # Defaults for options
+      # @param [Hash] opts Options
+      def setup_master_opts opts
+        opts = opts.clone
+        opts[:geo] ||= ""
+        opts[:game] ||= "arma2oapc"
+        opts
       end
 
       private
@@ -54,7 +54,22 @@ module GamespyQuery
 
           run do |opts, args, cmd|
             puts "Running Sync, #{opts}, #{args}, #{cmd}"
-            options.tasks << [:sync, args[0] || Dir.pwd]
+            if args.empty?
+              puts "Missing ip:port"
+              exit 1
+            end
+            host, port = if args.size > 1
+                           args
+                         else
+                           args[0].split(":")
+                         end
+            time_start = Time.now
+            g = GamespyQuery::Socket.new("#{host}:#{port}")
+            r = g.sync
+            time_taken = Time.now - time_start
+            puts "Took: #{time_taken}s"
+            exit unless r
+            puts r.to_yaml
           end
         end
 
@@ -69,6 +84,9 @@ module GamespyQuery
           usage   'master COMMAND [options]'
           aliases :m
 
+          option :g, :game, 'Specify game', :argument => :required
+          option nil, :geo, 'Specify geo', :argument => :required
+
           subcommand Cri::Command.new_basic_help
 
           run do |opts, args, cmd|
@@ -82,7 +100,10 @@ module GamespyQuery
           aliases :l
 
           run do |opts, args, cmd|
-            options.tasks << :list
+            opts = GamespyQuery::Options.setup_master_opts opts
+            master = GamespyQuery::Master.new(opts[:geo], opts[:game])
+            list = master.read
+            puts list
           end
         end
 
@@ -92,7 +113,11 @@ module GamespyQuery
           aliases :p
 
           run do |opts, args, cmd|
-            options.tasks << :process
+            opts = GamespyQuery::Options.setup_master_opts opts
+
+            master = GamespyQuery::Master.new(opts[:geo], opts[:game])
+            process = master.process
+            puts process
           end
         end
 
@@ -102,7 +127,9 @@ module GamespyQuery
           aliases :m
 
           run do |opts, args, cmd|
-            options.tasks << :process_master
+            opts = GamespyQuery::Options.setup_master_opts opts
+            process = GamespyQuery::SocketMaster.process_master(opts[:game], opts[:geo])
+            puts process
           end
         end
 
