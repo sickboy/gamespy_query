@@ -19,15 +19,13 @@ context "Funcs" do
       # TODO: This method doesnt do anything atm
       asserts("strip_tags") { topic.strip_tags "test" }.equals "test"
 
-      asserts("clean string") { topic.clean "test" }.equals "test"
       asserts("clean integer") { topic.clean "1" }.equals 1
       asserts("clean float") { topic.clean "1.5" }.equals 1.5
 
-      asserts("clean_string") { topic.clean_string("test encoding").encoding }.equals Encoding.find("UTF-8")
+      asserts("encode_string") { topic.encode_string("test encoding").encoding }.equals Encoding.find("UTF-8")
 
       asserts("handle_chr") { topic.handle_chr(25 >> 8) }.equals 0
 
-      asserts("get_string") { topic.get_string("test").encoding }.equals Encoding.find("UTF-8")
     end
   end
 end

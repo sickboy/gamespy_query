@@ -48,7 +48,9 @@ STR
     # @param [Block] block Block to yield string from
     def debug(&block)
       return unless DEBUG
-      logger.debug yield
+      out = yield
+      logger.debug out
+      puts out
     rescue Exception => e
       puts "Error: #{e.class} #{e.message}, #{e.backtrace.join("\n")}"
     end
@@ -68,10 +70,10 @@ STR
     end
 
     # Float Regex
-    RX_F = /\A\-?[0-9][0-9]*\.[0-9]*\Z/
+    RX_F = /\A\-?[0-9]+\.[0-9]*\Z/
     # Integer Regex
-    RX_I = /\A\-?[0-9][0-9]*\Z/
-    # Integer / Float Regex
+    RX_I = /\A\-?[0-9]+\Z/
+    # Integer / Float actually String Regex
     RX_S = /\A\-?0[0-9]+.*\Z/
 
     # Clean value, convert if possible
@@ -89,12 +91,6 @@ STR
       end
     end
 
-    # Convert string to UTF-8, stripping out all invalid/undefined characters
-    # @param [String] str String to convert
-    def clean_string(str)
-      str.encode("UTF-8", invalid: :replace, undef: :replace)
-    end
-
     # Handle char
     # @param [Integer] number Integer to convert
     def handle_chr(number)
@@ -103,31 +99,24 @@ STR
       number
     end
 
-    # Get UTF-8 string from string
-    # @param [String] str
-    def get_string(str)
-      Tools.debug {"Getting string #{str}"}
-      _get_string str
+    # Convert string to UTF-8, stripping out all invalid/undefined characters
+    # @param [String] str String to convert
+    def encode_string(str)
+      #Tools.debug {"Getting string #{str}"}
+      _encode_string str
     end
 
     if RUBY_PLATFORM =~ /mswin32/
-      include System::Net
-      include System::Net::Sockets
-
       # Get UTF-8 string from string
       # @param [String] str
-      def _get_string(str)
+      def _encode_string(str)
         System::Text::Encoding.UTF8.GetString(System::Array.of(System::Byte).new(str.bytes.to_a)).to_s # #  begin; System::Text::Encoding.USASCII.GetString(reply[0]).to_s; rescue nil, Exception => e; Tools.log_exception(e); reply[0].map {|e| e.chr}.join; end
       end
     else
-      require 'socket'
-      require 'timeout'
-
       # Get UTF-8 string from string
       # @param [String] str
-      def _get_string(str)
-        # str
-        (str + '  ').encode("UTF-8", invalid: :replace, undef: :replace)[0..-2]
+      def _encode_string(str)
+        (str + '  ').encode("UTF-8", invalid: :replace, undef: :replace)[0..-3]
       end
     end
   end

@@ -215,7 +215,7 @@ module GamespyQuery
             data = self.recvfrom_nonblock(RECEIVE_SIZE)
             Tools.debug {"Read (1): #{self.inspect}: #{data}"}
 
-            handle_challenge get_string(data[0])
+            handle_challenge data[0]
 
             self.state = STATE_RECEIVED_CHALLENGE
           when STATE_SENT_CHALLENGE_RESPONSE, STATE_RECEIVE_DATA
@@ -223,7 +223,7 @@ module GamespyQuery
             Tools.debug {"Read (3,4): #{self.inspect}: #{data}"}
             self.state = STATE_RECEIVE_DATA
 
-            game_data = get_string(data[0])
+            game_data = data[0]
             Tools.debug {"Received (#{self.data.size + 1}):\n\n#{game_data.inspect}\n\n#{game_data}\n\n"}
 
             index = handle_splitnum game_data
@@ -325,13 +325,13 @@ module GamespyQuery
             if IO.select(nil, [self], nil, DEFAULT_TIMEOUT)
               handle_write
             else
-              raise "TimeOut"
+              raise TimeOutError, "TimeOut"
             end
           else
             if IO.select([self], nil, nil, DEFAULT_TIMEOUT)
               handle_read
             else
-              raise "TimeOut"
+              raise TimeOutError, "TimeOut"
             end
           end
         end

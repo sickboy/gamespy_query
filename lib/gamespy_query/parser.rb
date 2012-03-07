@@ -45,11 +45,11 @@ module GamespyQuery
       data[:game] = {} # Key: InfoKey, Value: InfoValue
       data[:players] = {} # Key: InfoType, Value: Array of Values
       player_info = false
-      player_data = ""
+      player_data = "".encode "ASCII-8BIT"
 
       # Parse the packets
       @packets.each do |packet|
-        packet = clean_packet(packet)
+        packet = clean_packet packet
         if player_info
           # Player header was found before, add packet to player_data
           player_data += packet
@@ -87,8 +87,7 @@ module GamespyQuery
       packet.sub!(RX_X0_S, STR_EMPTY) # Cut off first \x00 
       packet.sub!(RX_END, STR_EMPTY) # Cut off the last \x00\x02
 
-      # Encoding
-      get_string(packet)
+      packet
     end
 
     # Parse game data in packet
@@ -101,9 +100,9 @@ module GamespyQuery
 
       packet.split(STR_SPLIT).each_with_index do |data, index|
         if (index % 2) == 0
-          key = clean_string data
+          key = encode_string data
         else
-          game_data[key] = data.is_a?(String) ? clean_string(data) : data
+          game_data[key] = data.is_a?(String) ? encode_string(data) : data
         end
       end
 
@@ -163,7 +162,7 @@ module GamespyQuery
           # Parse the data - \x00 is printed after a non-nil entry, otherwise \x00 means nil (e.g empty team)
           until str.empty?
             entry = str[RX_X0_SPEC]
-            player_data[player_data.keys[i]] << clean_string(entry.sub(STR_X0, STR_EMPTY))
+            player_data[player_data.keys[i]] << encode_string(entry.sub(STR_X0, STR_EMPTY))
             str.sub!(entry, STR_EMPTY)
           end
           
