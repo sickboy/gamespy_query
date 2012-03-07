@@ -116,7 +116,8 @@ STR
       # Get UTF-8 string from string
       # @param [String] str
       def _encode_string(str)
-        (str + '  ').encode("UTF-8", invalid: :replace, undef: :replace)[0..-3]
+        #(str + '  ').encode("US-ASCII", invalid: :replace, undef: :replace)[0..-3]
+        str.bytes.to_a.pack("U*")
       end
     end
   end
