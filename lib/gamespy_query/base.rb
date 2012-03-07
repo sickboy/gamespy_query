@@ -106,7 +106,7 @@ STR
     # Get UTF-8 string from string
     # @param [String] str
     def get_string(str)
-      Tools.debug {"Getting string #{params}"}
+      Tools.debug {"Getting string #{str}"}
       _get_string str
     end
 
