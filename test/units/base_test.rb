@@ -38,7 +38,7 @@ context "Tools" do
   denies("Logger") { topic.logger }.nil
 
   # TODO: Somehow returns strange string with unescaped double quotes embedded
-  asserts("dbg_msg") { topic.dbg_msg Exception.new }.equals "Exception: Exception\nBackTrace: \n(on line 17 in /srv/samba/share/gamespy_query/test/units/base_test.rb)"
+  asserts("dbg_msg") { topic.dbg_msg Exception.new }.equals "Exception: Exception\nBackTrace: \n"
 
   asserts("log_exception") { topic.log_exception Exception.new }.equals true
   asserts("debug") { topic.debug{"test"} }.nil
