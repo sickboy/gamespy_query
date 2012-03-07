@@ -147,6 +147,14 @@ module GamespyQuery
       self.connect(*addr.split(":"))
     end
 
+    # Exception
+    class NotInWriteState < StandardError
+    end
+
+    # Exception
+    class NotInReadState < StandardError
+    end
+
     # Sets the state of the socket
     # @param [Integer] state State to set
     def state=(state); @stamp = Time.now; @state = state; end
@@ -172,12 +180,16 @@ module GamespyQuery
             self.puts self.needs_challenge ? BASE_PACKET + @id_packet + self.needs_challenge + FULL_INFO_PACKET_MP : BASE_PACKET + @id_packet + FULL_INFO_PACKET_MP
             self.state = STATE_SENT_CHALLENGE_RESPONSE
           else
-            raise "NotInWriteState"
+            raise NotInWriteState, "NotInWriteState"
         end
+      rescue NotInWriteState => e
+        r = false
+        self.failed = true
+        close unless closed?
       rescue => e
         Tools.log_exception e
         self.failed = true
-        r = false
+        r = nil
         close unless closed?
       end
 
@@ -203,7 +215,7 @@ module GamespyQuery
             data = self.recvfrom_nonblock(RECEIVE_SIZE)
             Tools.debug {"Read (1): #{self.inspect}: #{data}"}
 
-            handle_challenge get_string(data[0])
+            handle_challenge data[0]
 
             self.state = STATE_RECEIVED_CHALLENGE
           when STATE_SENT_CHALLENGE_RESPONSE, STATE_RECEIVE_DATA
@@ -211,7 +223,7 @@ module GamespyQuery
             Tools.debug {"Read (3,4): #{self.inspect}: #{data}"}
             self.state = STATE_RECEIVE_DATA
 
-            game_data = get_string(data[0])
+            game_data = data[0]
             Tools.debug {"Received (#{self.data.size + 1}):\n\n#{game_data.inspect}\n\n#{game_data}\n\n"}
 
             index = handle_splitnum game_data
@@ -225,12 +237,17 @@ module GamespyQuery
               close unless closed?
             end
           else
-            raise "NotInReadState"
+            raise NotInReadState, "NotInReadState"
         end
+      rescue NotInReadState => e
+        r = false
+        self.failed = true
+        close unless closed?
       rescue => e
+        # TODO: Simply raise the exception?
         Tools.log_exception(e)
         self.failed = true
-        r = false
+        r = nil
         close unless closed?
       end
       r
@@ -308,13 +325,13 @@ module GamespyQuery
             if IO.select(nil, [self], nil, DEFAULT_TIMEOUT)
               handle_write
             else
-              raise "TimeOut"
+              raise TimeOutError, "TimeOut"
             end
           else
             if IO.select([self], nil, nil, DEFAULT_TIMEOUT)
               handle_read
             else
-              raise "TimeOut"
+              raise TimeOutError, "TimeOut"
             end
           end
         end
@@ -328,6 +345,7 @@ module GamespyQuery
         Tools.debug{"Gamespy pings: #{pings}, #{ping}"}
         @ping = ping
       rescue => e
+        # TODO: Simply raise the exception?
         Tools.log_exception(e)
         r = nil
         close unless closed?

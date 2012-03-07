@@ -1,35 +1,8 @@
 #!/usr/bin/env ruby
 
-# This binary is mostly intended for testing gamespy_query socket implementation
+# This binary is mostly intended for testing gamespy_query implementation
 
 require 'gamespy_query'
 
 # Parse commandline arguments
 options = GamespyQuery::Options.parse
-
-# Process tasks
-options.tasks.each do |t|
-  opts = {}
-  task = if t.is_a?(Array)
-           opts = t[1]
-           t[0]
-         else
-           t
-         end
-
-  case task
-    when :sync
-      host, port = if options.argv.size > 1
-                     options.argv
-                   else
-                     options.argv[0].split(":")
-                   end
-      time_start = Time.now
-      g = GamespyQuery::Socket.new("#{host}:#{port}")
-      r = g.sync
-      time_taken = Time.now - time_start
-      puts "Took: #{time_taken}s"
-      exit unless r
-      puts r.to_yaml
-  end
-end

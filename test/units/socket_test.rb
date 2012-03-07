@@ -10,14 +10,16 @@ context "Socket" do
 
   denies("Confirm valid") { topic.valid? }
 
-  asserts("Set state 3, confirm set") { topic.state = 3; topic.state }.equals 3
+  asserts("handle_write") { topic.state = 0; topic.handle_write }.nil
+  asserts("handle_read") { topic.state = 1; topic.handle_read }.nil
+  asserts("handle_write") { topic.state = 2; topic.handle_write }.nil
+  asserts("handle_read") { topic.state = 3; topic.handle_read }.nil
+  asserts("handle_read") { topic.state = 4; topic.handle_read }.nil
   asserts("Set state 5, confirm valid") { topic.state = 5; topic.valid? }
 
   denies("handle_write") { topic.state = 1; topic.handle_write }
   denies("handle_read") { topic.state = 0; topic.handle_read }
 
-  asserts("handle_write") { topic.state = 0; topic.handle_write }
-  asserts("handle_read") { topic.state = 1; topic.handle_read }
 
   # TODO
   #asserts("handle_exc") { topic.handle_exc }
@@ -27,7 +29,7 @@ context "Socket" do
   asserts("handle_state (Write)") { topic.state = 0; topic.handle_state }
   denies("handle_state (Read)") { topic.state = 1; topic.handle_state }
 
-  asserts("fetch") { topic.fetch }
+  asserts("fetch") { topic.fetch }.nil
 
   asserts("sync") { topic.sync }
 
