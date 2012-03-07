@@ -17,6 +17,9 @@ module GamespyQuery
     RX_PLAYER_HEADER = /\x01/
     RX_END = /\x00\x02$/
 
+    class UnsupportedFormat < StandardError
+    end
+
     # Packets to process
     attr_reader :packets
 
@@ -32,7 +35,7 @@ module GamespyQuery
       when Array
         packets
       else
-        raise "Unsupported format"
+        raise UnsupportedFormat, "Unsupported format: #{packets.class}"
       end
     end
 

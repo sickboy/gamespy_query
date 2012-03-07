@@ -74,7 +74,7 @@ module GamespyQuery
             @s.recvfrom(RECEIVE_SIZE)
           end
         rescue Timeout::Error
-          raise TimeoutError
+          raise TimeoutError, "TimeOut on #{self}"
         ensure
           @s.close
         end
@@ -180,7 +180,7 @@ module GamespyQuery
             self.puts self.needs_challenge ? BASE_PACKET + @id_packet + self.needs_challenge + FULL_INFO_PACKET_MP : BASE_PACKET + @id_packet + FULL_INFO_PACKET_MP
             self.state = STATE_SENT_CHALLENGE_RESPONSE
           else
-            raise NotInWriteState, "NotInWriteState"
+            raise NotInWriteState, "NotInWriteState, #{self}"
         end
       rescue NotInWriteState => e
         r = false
@@ -237,7 +237,7 @@ module GamespyQuery
               close unless closed?
             end
           else
-            raise NotInReadState, "NotInReadState"
+            raise NotInReadState, "NotInReadState, #{self}"
         end
       rescue NotInReadState => e
         r = false
@@ -325,13 +325,13 @@ module GamespyQuery
             if IO.select(nil, [self], nil, DEFAULT_TIMEOUT)
               handle_write
             else
-              raise TimeOutError, "TimeOut"
+              raise TimeOutError, "TimeOut during write, #{self}"
             end
           else
             if IO.select([self], nil, nil, DEFAULT_TIMEOUT)
               handle_read
             else
-              raise TimeOutError, "TimeOut"
+              raise TimeOutError, "TimeOut during read, #{self}"
             end
           end
         end
