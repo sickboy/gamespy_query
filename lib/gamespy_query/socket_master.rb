@@ -95,7 +95,7 @@ module GamespyQuery
             data[:gamename] = game
             data[:gamedata].merge!(s.sync(s.data))
           rescue => e
-            puts "#{e.message}, #{e.backtrace.join("\n")}"
+            Tools.log_exception e
           end
         end
 
