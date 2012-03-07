@@ -147,6 +147,14 @@ module GamespyQuery
       self.connect(*addr.split(":"))
     end
 
+    # Exception
+    class NotInWriteState < StandardError
+    end
+
+    # Exception
+    class NotInReadState < StandardError
+    end
+
     # Sets the state of the socket
     # @param [Integer] state State to set
     def state=(state); @stamp = Time.now; @state = state; end
@@ -172,12 +180,16 @@ module GamespyQuery
             self.puts self.needs_challenge ? BASE_PACKET + @id_packet + self.needs_challenge + FULL_INFO_PACKET_MP : BASE_PACKET + @id_packet + FULL_INFO_PACKET_MP
             self.state = STATE_SENT_CHALLENGE_RESPONSE
           else
-            raise "NotInWriteState"
+            raise NotInWriteState, "NotInWriteState"
         end
+      rescue NotInWriteState => e
+        r = false
+        self.failed = true
+        close unless closed?
       rescue => e
         Tools.log_exception e
         self.failed = true
-        r = false
+        r = nil
         close unless closed?
       end
 
@@ -225,12 +237,17 @@ module GamespyQuery
               close unless closed?
             end
           else
-            raise "NotInReadState"
+            raise NotInReadState, "NotInReadState"
         end
+      rescue NotInReadState => e
+        r = false
+        self.failed = true
+        close unless closed?
       rescue => e
+        # TODO: Simply raise the exception?
         Tools.log_exception(e)
         self.failed = true
-        r = false
+        r = nil
         close unless closed?
       end
       r
@@ -328,6 +345,7 @@ module GamespyQuery
         Tools.debug{"Gamespy pings: #{pings}, #{ping}"}
         @ping = ping
       rescue => e
+        # TODO: Simply raise the exception?
         Tools.log_exception(e)
         r = nil
         close unless closed?
