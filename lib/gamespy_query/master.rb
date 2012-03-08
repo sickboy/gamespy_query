@@ -87,10 +87,14 @@ module GamespyQuery
         ip, port, content = $1, $2, $3
         content = content.split(STR_SPLIT)
         content << "" unless (content.size % 2 == 0)
-        i = 0
-        content.map! do |e|
-          i += 1
-          i % 2 == 0 ? e : encode_string(e)
+        game_data = {}
+        key = nil
+        content.each_with_index do |data, i|
+          if i % 2 == 0
+            key = data.to_sym
+          else
+            game_data[key] = data.is_a?(String) ? encode_string(data) : data
+          end
         end
         addr = "#{ip}:#{port}"
         if list.has_key?(addr)
@@ -103,9 +107,9 @@ module GamespyQuery
           list[addr] = e
         end
         if e[:gamedata]
-          e[:gamedata].merge!(Hash[*content])
+          e[:gamedata].merge!(game_data)
         else
-          e[:gamedata] = Hash[*content]
+          e[:gamedata] = game_data
         end
       end
       list

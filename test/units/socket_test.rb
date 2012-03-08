@@ -38,7 +38,7 @@ context "Socket" do
     asserts("Is a hash") { topic }.is_a?(Hash)
 
     context "Players" do
-      setup { topic["players"] }
+      setup { topic[:players] }
       asserts("Players defined") { topic }.is_a?(Hash)
 
       context "Player 0" do
@@ -60,9 +60,9 @@ context "Socket" do
       end
 
     end
-    asserts("Hostname defined") { topic["hostname"] }.is_a?(String)
-    asserts("Hostname") { topic["hostname"] }.equals "-=WASP=- Warfare CO (Prime)"
-    asserts("Modhash") { topic["modhash"] }.equals "PMC v. 1.01;BAF v. 1.02;da39a3ee5e6b4b0d3255bfef95601890afd80709;"
+    asserts("Hostname defined") { topic[:hostname] }.is_a?(String)
+    asserts("Hostname") { topic[:hostname] }.equals "-=WASP=- Warfare CO (Prime)"
+    asserts("Modhash") { topic[:modhash] }.equals "PMC v. 1.01;BAF v. 1.02;da39a3ee5e6b4b0d3255bfef95601890afd80709;"
   end
 
   # TODO
