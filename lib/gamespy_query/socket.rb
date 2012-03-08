@@ -308,9 +308,9 @@ module GamespyQuery
       data = parser.parse
 
       game_data.merge!(data[:game])
-      game_data["players"] = Parser.pretty_player_data2(data[:players]).sort {|a, b| a[:name].downcase <=> b[:name].downcase }
+      game_data[:players] = Parser.pretty_player_data2(data[:players]).sort {|a, b| a[:name].downcase <=> b[:name].downcase }
 
-      game_data["ping"] = @ping unless @ping.nil?
+      game_data[:ping] = @ping unless @ping.nil?
 
       game_data
     end
