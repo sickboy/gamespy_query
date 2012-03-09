@@ -13,6 +13,14 @@ module GamespyQuery
         "\\\\"
     end
 
+    path = defined?(Rails) ? File.join(Rails.root, "config") : File.join(Dir.pwd, "config")
+    DEFAULT_GEOIP_PATH = case RUBY_PLATFORM
+                  when /-mingw32$/, /-mswin32$/
+                    path.gsub("/", "\\")
+                  else
+                    path
+                end
+
     # Geo settings
     attr_reader :geo
 
@@ -22,8 +30,8 @@ module GamespyQuery
     # Initializes the instance
     # @param [String] geo Geo string
     # @param [String] game Game string
-    def initialize(geo = nil, game = "arma2oapc")
-      @geo, @game = geo, game
+    def initialize(geo = nil, game = "arma2oapc", geoip_path = nil)
+      @geo, @game, @geoip_path = geo, game, geoip_path
     end
 
     # Convert the master browser data to hash
@@ -118,14 +126,7 @@ module GamespyQuery
 
     # Get geoip_path
     def geoip_path
-      return File.join(Dir.pwd, "config") unless defined?(Rails)
-
-      case RUBY_PLATFORM
-        when /-mingw32$/, /-mswin32$/
-          File.join(Rails.root, "config").gsub("/", "\\")
-        else
-          File.join(Rails.root, "config")
-      end
+      @geoip_path || DEFAULT_GEOIP_PATH
     end
   end
 end
