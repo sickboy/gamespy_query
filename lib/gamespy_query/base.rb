@@ -103,22 +103,8 @@ STR
     # @param [String] str String to convert
     def encode_string(str)
       #Tools.debug {"Getting string #{str}"}
-      _encode_string str
-    end
-
-    if RUBY_PLATFORM =~ /mswin32/
-      # Get UTF-8 string from string
-      # @param [String] str
-      def _encode_string(str)
-        System::Text::Encoding.UTF8.GetString(System::Array.of(System::Byte).new(str.bytes.to_a)).to_s # #  begin; System::Text::Encoding.USASCII.GetString(reply[0]).to_s; rescue nil, Exception => e; Tools.log_exception(e); reply[0].map {|e| e.chr}.join; end
-      end
-    else
-      # Get UTF-8 string from string
-      # @param [String] str
-      def _encode_string(str)
-        #(str + '  ').encode("US-ASCII", invalid: :replace, undef: :replace)[0..-3]
-        str.bytes.to_a.pack("U*")
-      end
+      # System::Text::Encoding.UTF8.GetString(System::Array.of(System::Byte).new(str.bytes.to_a)).to_s # #  begin; System::Text::Encoding.USASCII.GetString(reply[0]).to_s; rescue nil, Exception => e; Tools.log_exception(e); reply[0].map {|e| e.chr}.join; end
+      str.bytes.to_a.pack("U*")
     end
   end
 

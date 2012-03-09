@@ -104,21 +104,3 @@ module GamespyQuery
     end
   end
 end
-
-if $0 == __FILE__
-  require_relative 'master'
-  srv = File.open(ARGV[0] || "servers.txt") { |f| f.read }
-  master = GamespyQuery::Master.new
-  addrs = master.get_server_list srv
-
-  time_start = Time.now
-  sm = GamespyQuery::SocketMaster.new(addrs)
-  sockets = sm.process!
-  time_taken = Time.now - time_start
-
-  cool = sockets.count {|v| v.valid? }
-  dude = sockets.size - cool
-
-  puts "Success: #{cool}, Failed: #{dude}"
-  puts "Took: #{time_taken}s"
-end
