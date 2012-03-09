@@ -5,83 +5,6 @@ require 'yaml'
 require 'socket'
 
 module GamespyQuery
-  # Provides socket functionality on multiple platforms
-  # TODO
-  module MultiSocket
-    # Create socket
-    def create_socket(*params)
-      Tools.debug {"Creating socket #{params}"}
-      _create_socket(*params)
-    end
-
-    # Write socket
-    def socket_send(*params)
-      Tools.debug {"Sending socket #{params}"}
-      _socket_send(*params)
-    end
-
-    # Read socket
-    def socket_receive(*params)
-      Tools.debug {"Receiving socket #{params}"}
-      _socket_receive(*params)
-    end
-
-    # Close socket
-    def socket_close(*params)
-      Tools.debug {"Closing socket #{params}"}
-      @s.close
-    end
-
-    if RUBY_PLATFORM =~ /mswin32/
-      include System::Net
-      include System::Net::Sockets
-
-      # Create socket
-      def _create_socket(host, port)
-        @ip_end_point = IPEndPoint.new(IPAddress.Any, 0)
-        @s = UdpClient.new
-        @s.client.receive_timeout = DEFAULT_TIMEOUT * 1000
-        @s.connect(host, port.to_i)
-      end
-
-      # Write socket
-      def _socket_send(packet)
-        @s.Send(packet, packet.length)
-      end
-
-      # Read socket
-      def _socket_receive
-        @s.Receive(@ip_end_point)
-      end
-
-    else
-
-      # Create socket
-      def _create_socket(host, port)
-        @s = UDPSocket.new
-        @s.connect(host, port)
-      end
-
-      # Write socket
-      def _socket_send(packet)
-        @s.puts(packet)
-      end
-
-      # Read socket
-      def _socket_receive
-        begin
-          Timeout::timeout(DEFAULT_TIMEOUT) do
-            @s.recvfrom(RECEIVE_SIZE)
-          end
-        rescue Timeout::Error
-          raise TimeoutError, "TimeOut on #{self}"
-        ensure
-          @s.close
-        end
-      end
-    end
-  end
-
   # Provides direct connection functionality to gamespy enabled game servers
   # This query contains up to 7x more information than the gamespy master browser query
   # For example, player lists with info (teams, scores, deaths) are only available by using direct connection
@@ -341,4 +264,83 @@ module GamespyQuery
       r
     end
   end
+
+  # Provides socket functionality on multiple platforms
+  # TODO
+=begin
+  module MultiSocket
+    # Create socket
+    def create_socket(*params)
+      Tools.debug {"Creating socket #{params}"}
+      _create_socket(*params)
+    end
+
+    # Write socket
+    def socket_send(*params)
+      Tools.debug {"Sending socket #{params}"}
+      _socket_send(*params)
+    end
+
+    # Read socket
+    def socket_receive(*params)
+      Tools.debug {"Receiving socket #{params}"}
+      _socket_receive(*params)
+    end
+
+    # Close socket
+    def socket_close(*params)
+      Tools.debug {"Closing socket #{params}"}
+      @s.close
+    end
+
+    if RUBY_PLATFORM =~ /mswin32/
+      include System::Net
+      include System::Net::Sockets
+
+      # Create socket
+      def _create_socket(host, port)
+        @ip_end_point = IPEndPoint.new(IPAddress.Any, 0)
+        @s = UdpClient.new
+        @s.client.receive_timeout = DEFAULT_TIMEOUT * 1000
+        @s.connect(host, port.to_i)
+      end
+
+      # Write socket
+      def _socket_send(packet)
+        @s.Send(packet, packet.length)
+      end
+
+      # Read socket
+      def _socket_receive
+        @s.Receive(@ip_end_point)
+      end
+
+    else
+
+      # Create socket
+      def _create_socket(host, port)
+        @s = UDPSocket.new
+        @s.connect(host, port)
+      end
+
+      # Write socket
+      def _socket_send(packet)
+        @s.puts(packet)
+      end
+
+      # Read socket
+      def _socket_receive
+        begin
+          Timeout::timeout(DEFAULT_TIMEOUT) do
+            @s.recvfrom(RECEIVE_SIZE)
+          end
+        rescue Timeout::Error
+          raise TimeoutError, "TimeOut on #{self}"
+        ensure
+          @s.close
+        end
+      end
+    end
+  end
+=end
 end
