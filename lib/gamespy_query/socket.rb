@@ -108,21 +108,9 @@ module GamespyQuery
     # Maximum receive size
     RECEIVE_SIZE = 1500
 
-    STR_HOSTNAME = "hostname"
-    STR_PLAYERS = "players"
-    STR_DEATHS = "deaths_\x00\x00"
-    STR_PLAYER = "player_\x00\x00"
-    STR_TEAM = "team_\x00\x00"
-    STR_SCORE = "score_\x00\x00"
-
-    SPLIT = STR_X0
-    STR_END = "\x00\x02"
     STR_EMPTY = Tools::STR_EMPTY
     STR_BLA = "%c%c%c%c".encode("ASCII-8BIT")
     STR_GARBAGE = "\x00\x04\x05\x06\a"
-
-    RX_PLAYER_EMPTY = /^player_\x00\x00\x00/
-    RX_PLAYER_INFO = /\x01(team|player|score|deaths)_.(.)/ # \x00 from previous packet, \x01 from continueing player info, (.) - should it overwrite previous value?
 
     RX_NO_CHALLENGE = /0@0$/
     RX_CHALLENGE = /0@/
