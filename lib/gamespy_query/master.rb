@@ -130,9 +130,3 @@ module GamespyQuery
     end
   end
 end
-
-if $0 == __FILE__
-  master = GamespyQuery::Master.new
-  r = master.read
-  puts r
-end
