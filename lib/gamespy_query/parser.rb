@@ -177,7 +177,6 @@ module GamespyQuery
               overwrite = true # tag so that the next entry will overwrite the latest entry
               next # ignore
             else
-              info = clean(info) if [2,3].include?(i) # Apply data_type conversion for Score and Deaths
               if overwrite
                 new_player_data[-1] = info # Overwrite latest entry
                 overwrite = false # done the overwrite

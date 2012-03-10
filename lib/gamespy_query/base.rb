@@ -76,9 +76,9 @@ STR
     # Integer / Float actually String Regex
     RX_S = /\A\-?0[0-9]+.*\Z/
 
-    # Clean value, convert if possible
+    # Convert data type and strip tags
     # @param [String] value String to convert
-    def clean(value) # TODO: Force String, Integer, Float etc?
+    def convert_type(value) # TODO: Force String, Integer, Float etc?
       case value
         when STR_X0
           nil

@@ -19,8 +19,8 @@ context "Funcs" do
       # TODO: This method doesnt do anything atm
       asserts("strip_tags") { topic.strip_tags "test" }.equals "test"
 
-      asserts("clean integer") { topic.clean "1" }.equals 1
-      asserts("clean float") { topic.clean "1.5" }.equals 1.5
+      asserts("convert integer") { topic.convert_type "1" }.equals 1
+      asserts("convert float") { topic.convert_type "1.5" }.equals 1.5
 
       asserts("encode_string") { topic.encode_string("test encoding").encoding }.equals Encoding.find("UTF-8")
 
