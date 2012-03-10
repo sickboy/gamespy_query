@@ -30,13 +30,13 @@ module GamespyQuery
     #   - Array, packetDATA ordered already by packetID
     def initialize(packets)
       @packets = case packets
-      when Hash
-        packets.keys.sort.map{|key| packets[key] }
-      when Array
-        packets
-      else
-        raise UnsupportedFormat, "Unsupported format: #{packets.class}"
-      end
+                   when Hash
+                     packets.keys.sort.map{|key| packets[key] }
+                   when Array
+                     packets
+                   else
+                     raise UnsupportedFormat, "Unsupported format: #{packets.class}"
+                 end
     end
 
     # Parse game and player data to hash
@@ -48,7 +48,7 @@ module GamespyQuery
       data[:game] = {} # Key: InfoKey, Value: InfoValue
       data[:players] = {} # Key: InfoType, Value: Array of Values
       player_info = false
-      player_data = "".encode "ASCII-8BIT"
+      player_data = ""
 
       # Parse the packets
       @packets.each do |packet|
@@ -70,12 +70,12 @@ module GamespyQuery
           else
             # GameData-only
             data[:game].merge!(parse_game_data(packet))
-          end         
+          end
         end
       end
 
       # Parse player_data
-      data[:players] = parse_player_data(player_data)
+      data[:players] = parse_player_data(encode_string player_data)
 
       data
     end
@@ -168,7 +168,7 @@ module GamespyQuery
             player_data[player_data.keys[i]] << encode_string(entry.sub(STR_X0, STR_EMPTY))
             str.sub!(entry, STR_EMPTY)
           end
-          
+
           # Search for SIX string to overwrite last entry
           new_player_data = []
           overwrite = false
