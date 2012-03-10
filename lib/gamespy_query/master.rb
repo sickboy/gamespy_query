@@ -1,6 +1,10 @@
 module GamespyQuery
   # Provides access to the Gamespy Master browser
   class Master < Base
+    # TODO: gslist.exe output encoding seems to be a problem.
+    # not been able to find a solution yet to get unicode instead of garbelled characters
+    # If impossible, perhaps should try custom implementation of master query
+
     PARAMS = [:hostname, :gamever, :gametype, :gamemode, :numplayers, :maxplayers, :password, :equalModRequired, :mission, :mapname,
               :mod, :signatures, :verifysignatures, :gamestate, :dedicated, :platform, :sv_battleye, :language, :difficulty]
 
