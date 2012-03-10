@@ -40,8 +40,6 @@ module GamespyQuery
     RX_CHALLENGE2 = /[^0-9\-]/si
     RX_SPLITNUM = /^splitnum\x00(.)/i
 
-    PLATFORM_IR = /-mswin32/
-
     # TODO: Support pings
     # TODO: Handle .NET native sockets
     STATE_INIT, STATE_SENT_CHALLENGE, STATE_RECEIVED_CHALLENGE, STATE_SENT_CHALLENGE_RESPONSE, STATE_RECEIVE_DATA, STATE_READY = 0, 1, 2, 3, 4, 5
