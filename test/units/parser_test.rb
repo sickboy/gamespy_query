@@ -16,8 +16,8 @@ context "Parser" do
       setup { topic[:game] }
       denies("Game data") { topic }.empty
 
-      asserts("gamever") { topic["gamever"] }.equals "1.59.79548"
-      asserts("sv_battleye") { topic["sv_battleye"] }.equals "1"
+      asserts("gamever") { topic[:gamever] }.equals "1.59.79548"
+      asserts("sv_battleye") { topic[:sv_battleye] }.equals "1"
     end
 
     context "Players data" do
@@ -32,15 +32,15 @@ context "Parser" do
       context "First element" do
         asserts("Name") { topic[:names][0] }.equals "Skilllos"
         asserts("Team") { topic[:teams][0] }.equals ""
-        asserts("Score") { topic[:scores][0] }.equals 371
-        asserts("Deaths") { topic[:deaths][0] }.equals 24
+        asserts("Score") { topic[:scores][0] }.equals "371"
+        asserts("Deaths") { topic[:deaths][0] }.equals "24"
       end
 
       context "Tenth element" do
         asserts("Name") { topic[:names][10] }.equals "DrHat"
         asserts("Team") { topic[:teams][10] }.equals ""
-        asserts("Score") { topic[:scores][10] }.equals 37
-        asserts("Deaths") { topic[:deaths][10] }.equals 8
+        asserts("Score") { topic[:scores][10] }.equals "37"
+        asserts("Deaths") { topic[:deaths][10] }.equals "8"
       end
     end
   end

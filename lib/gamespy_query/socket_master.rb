@@ -54,10 +54,10 @@ module GamespyQuery
           Tools.debug {"Sockets: #{queue.size}, AddrsLeft: #{@addrs.size}, ReadReady: #{"#{ready[0].size} / #{read_sockets.size}, WriteReady: #{ready[1].size} / #{write_sockets.size}, ExcReady: #{ready[2].size} / #{queue.size}" unless ready.nil?}"}
 
           # Read
-          ready[0].each { |s| queue.delete(s) unless s.handle_read() }
+          ready[0].each { |s| begin; s.handle_read(); rescue nil, Exception => e; queue.delete(s); end }
 
           # Write
-          ready[1].each { |s| queue.delete(s) unless s.handle_write() }
+          ready[1].each { |s| begin; s.handle_write(); rescue nil, Exception => e; queue.delete(s); end }
 
           # Exceptions
           #ready[2].each { |s| queue.delete(s) unless s.handle_exc }

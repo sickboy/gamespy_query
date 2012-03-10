@@ -40,6 +40,8 @@ module GamespyQuery
     RX_CHALLENGE2 = /[^0-9\-]/si
     RX_SPLITNUM = /^splitnum\x00(.)/i
 
+    PLATFORM_IR = /-mswin32/
+
     # TODO: Support pings
     # TODO: Handle .NET native sockets
     STATE_INIT, STATE_SENT_CHALLENGE, STATE_RECEIVED_CHALLENGE, STATE_SENT_CHALLENGE_RESPONSE, STATE_RECEIVE_DATA, STATE_READY = 0, 1, 2, 3, 4, 5
@@ -93,15 +95,11 @@ module GamespyQuery
           else
             raise NotInWriteState, "NotInWriteState, #{self}"
         end
-      rescue NotInWriteState => e
-        r = false
-        self.failed = true
-        close unless closed?
-      rescue => e
-        Tools.log_exception e
+      rescue nil, Exception => e
         self.failed = true
         r = nil
         close unless closed?
+        raise e
       end
 
 =begin
@@ -115,6 +113,31 @@ module GamespyQuery
       r
     end
 
+    # Temp Workaround for IO.select issue on IR
+    def _read_non_block
+      if RUBY_PLATFORM =~ PLATFORM_IR
+        time_end = Time.now + DEFAULT_TIMEOUT
+        success = false
+        until success || Time.now >= time_end
+          begin
+            d = self.recvfrom_nonblock(RECEIVE_SIZE)
+            success = d
+          rescue SocketError
+
+          rescue nil, Exception => e
+            Tools.log_exception(e)
+          end
+        end
+        if success
+          success
+        else
+          raise TimeOutError, "The read operation has timedout"
+        end
+      else
+        self.recvfrom_nonblock(RECEIVE_SIZE)
+      end
+    end
+
     # Handle the read state
     def handle_read
       # Tools.debug {"Read: #{self.inspect}, #{self.state}"}
@@ -123,14 +146,14 @@ module GamespyQuery
       begin
         case self.state
           when STATE_SENT_CHALLENGE
-            data = self.recvfrom_nonblock(RECEIVE_SIZE)
+            data = _read_non_block
             Tools.debug {"Read (1): #{self.inspect}: #{data}"}
 
             handle_challenge data[0]
 
             self.state = STATE_RECEIVED_CHALLENGE
           when STATE_SENT_CHALLENGE_RESPONSE, STATE_RECEIVE_DATA
-            data = self.recvfrom_nonblock(RECEIVE_SIZE)
+            data = _read_non_block
             Tools.debug {"Read (3,4): #{self.inspect}: #{data}"}
             self.state = STATE_RECEIVE_DATA
 
@@ -150,16 +173,11 @@ module GamespyQuery
           else
             raise NotInReadState, "NotInReadState, #{self}"
         end
-      rescue NotInReadState => e
-        r = false
-        self.failed = true
-        close unless closed?
-      rescue => e
-        # TODO: Simply raise the exception?
-        Tools.log_exception(e)
+      rescue nil, Exception => e
         self.failed = true
         r = nil
         close unless closed?
+        raise e
       end
       r
     end
@@ -213,6 +231,7 @@ module GamespyQuery
     # @param [String] reply Reply from server
     def sync reply = self.fetch
       game_data, key = {}, nil
+      Tools.debug {"DATA: #{reply.inspect}"}
       return game_data if reply.nil? || reply.empty?
 
       parser = Parser.new(reply)
@@ -228,18 +247,19 @@ module GamespyQuery
 
     # Fetch all packets from socket
     def fetch
+      Tools.debug {"FUCK ME"}
       pings = []
       r = self.data
       begin
-        until valid?
+        until valid? || failed
           if handle_state
-            if IO.select(nil, [self], nil, DEFAULT_TIMEOUT)
+            if RUBY_PLATFORM =~ PLATFORM_IR || IO.select(nil, [self], nil, DEFAULT_TIMEOUT)
               handle_write
             else
               raise TimeOutError, "TimeOut during write, #{self}"
             end
           else
-            if IO.select([self], nil, nil, DEFAULT_TIMEOUT)
+            if RUBY_PLATFORM =~ PLATFORM_IR || IO.select([self], nil, nil, DEFAULT_TIMEOUT)
               handle_read
             else
               raise TimeOutError, "TimeOut during read, #{self}"
