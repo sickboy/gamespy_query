@@ -10,15 +10,15 @@ context "Socket" do
 
   denies("Confirm valid") { topic.valid? }
 
-  asserts("handle_write") { topic.state = 0; topic.handle_write }.nil
-  asserts("handle_read") { topic.state = 1; topic.handle_read }.nil
-  asserts("handle_write") { topic.state = 2; topic.handle_write }.nil
-  asserts("handle_read") { topic.state = 3; topic.handle_read }.nil
-  asserts("handle_read") { topic.state = 4; topic.handle_read }.nil
+  #asserts("handle_write") { topic.state = 0; topic.handle_write }.nil
+  #asserts("handle_read") { topic.state = 1; topic.handle_read }.nil
+  #asserts("handle_write") { topic.state = 2; topic.handle_write }.nil
+  #asserts("handle_read") { topic.state = 3; topic.handle_read }.nil
+  #asserts("handle_read") { topic.state = 4; topic.handle_read }.nil
   asserts("Set state 5, confirm valid") { topic.state = 5; topic.valid? }
 
-  denies("handle_write") { topic.state = 1; topic.handle_write }
-  denies("handle_read") { topic.state = 0; topic.handle_read }
+  #denies("handle_write") { topic.state = 1; topic.handle_write }
+  #denies("handle_read") { topic.state = 0; topic.handle_read }
 
 
   # TODO
