@@ -75,7 +75,7 @@ module GamespyQuery
       end
 
       # Parse player_data
-      data[:players] = parse_player_data(encode_string player_data)
+      data[:players] = parse_player_data(player_data)
 
       data
     end
@@ -165,7 +165,7 @@ module GamespyQuery
           # Parse the data - \x00 is printed after a non-nil entry, otherwise \x00 means nil (e.g empty team)
           until str.empty?
             entry = str[RX_X0_SPEC]
-            player_data[player_data.keys[i]] << encode_string(entry.sub(STR_X0, STR_EMPTY))
+            player_data[player_data.keys[i]] << entry.sub(STR_X0, STR_EMPTY)
             str.sub!(entry, STR_EMPTY)
           end
 
@@ -178,11 +178,11 @@ module GamespyQuery
               next # ignore
             else
               if overwrite
-                new_player_data[-1] = info # Overwrite latest entry
+                new_player_data[-1] = encode_string(info) # Overwrite latest entry
                 overwrite = false # done the overwrite
               else
                 #break if new_player_data.size == num_players
-                new_player_data << info # insert entry
+                new_player_data << encode_string(info) # insert entry
               end
             end
           end

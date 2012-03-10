@@ -106,12 +106,19 @@ STR
     def encode_string(str)
       #Tools.debug {"Getting string #{str}"}
       #System::Text::Encoding.UTF8.GetString(System::Array.of(System::Byte).new(str.bytes.to_a)).to_s # #  begin; System::Text::Encoding.USASCII.GetString(reply[0]).to_s; rescue nil, Exception => e; Tools.log_exception(e); reply[0].map {|e| e.chr}.join; end
+      # TODO: Temporary disabled due to issues with the encoded strings
+=begin
       begin
-        str.bytes.to_a.pack('C*').force_encoding(STR_UTF8)
+        # str.force_encoding(STR_UTF8)
+        (str + '  ').encode(STR_UTF8, STR_UTF8, invalid: :replace, undef: :replace)[0..-3]
       rescue nil, Exception => e
+        # Fallback - convert to UTF and replace any invalid or undefined
         Tools.log_exception e
-        str.encode("UTF-8", invalid: :replace, undef: :replace)
+        str.encode(STR_UTF8, invalid: :replace, undef: :replace)
       end
+=end
+      # Fallback - convert to UTF and replace any invalid or undefined
+      str.encode(STR_UTF8, invalid: :replace, undef: :replace)
     end
   end
 
