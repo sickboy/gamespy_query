@@ -2,7 +2,7 @@ module GamespyQuery
   # Provides access to the Gamespy Master browser
   class Master < Base
     PARAMS = [:hostname, :gamever, :gametype, :gamemode, :numplayers, :maxplayers, :password, :equalModRequired, :mission, :mapname,
-              :mod, :signatures, :verifysignatures, :gamestate, :dedicated, :platform, :sv_battleeye, :language, :difficulty]
+              :mod, :signatures, :verifysignatures, :gamestate, :dedicated, :platform, :sv_battleye, :language, :difficulty]
 
     RX_ADDR_LINE = /^[\s\t]*([\d\.]+)[\s\t:]*(\d+)[\s\t]*(.*)$/
 
