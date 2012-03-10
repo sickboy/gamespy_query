@@ -247,7 +247,6 @@ module GamespyQuery
 
     # Fetch all packets from socket
     def fetch
-      Tools.debug {"FUCK ME"}
       pings = []
       r = self.data
       begin
