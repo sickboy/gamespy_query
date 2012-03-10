@@ -13,7 +13,7 @@ module GamespyQuery
   module Tools
     STR_EMPTY = ""
     CHAR_N = "\n"
-  
+
     module_function
     # Provides access to the logger object
     # Will use ActionController::Base.logger if available
