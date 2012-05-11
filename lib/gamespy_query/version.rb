@@ -1,4 +1,4 @@
 module GamespyQuery
   # Version of the library
-  VERSION = "0.2.0pre6"
+  VERSION = "0.2.0pre7"
 end

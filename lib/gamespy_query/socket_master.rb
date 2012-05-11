@@ -101,7 +101,7 @@ module GamespyQuery
           end
         end
 
-        dedicated_only ? gm_dat : dat.values
+        dedicated_only ? gm_dat.values : dat.values
       end
     end
   end
