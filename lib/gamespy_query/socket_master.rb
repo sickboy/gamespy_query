@@ -87,8 +87,8 @@ module GamespyQuery
         dat = master.process list
 
         ded = "1"
-        gm_dat = dedicated_only || sm_dedicated_only ? dat.keys.select{|k| dat[k][:gamedata] && dat[k][:gamedata][:dedicated] == ded } : dat.keys
-        sm = GamespyQuery::SocketMaster.new(gm_dat)
+        gm_dat = dedicated_only || sm_dedicated_only ? dat.select{|item| item[:gamedata] && item[:gamedata][:dedicated] == ded } : dat
+        sm = GamespyQuery::SocketMaster.new(gm_dat.keys)
         sockets = sm.process!
         sockets.select{|s| s.valid? }.each do |s|
           begin
