@@ -87,12 +87,22 @@ module GamespyQuery
         dat = master.process list
 
         ded = "1"
-        gm_dat = dedicated_only || sm_dedicated_only ? dat.select{|item| item[:gamedata] && item[:gamedata][:dedicated] == ded } : dat
+        gm_dat = if dedicated_only || sm_dedicated_only
+          h = {}
+          dat.each_pair do |k, v|
+            next unless v[:gamedata] && v[:gamedata][:dedicated] == ded
+            h[k] = v
+          end
+          h
+        else
+          dat
+        end
+
         sm = GamespyQuery::SocketMaster.new(gm_dat.keys)
         sockets = sm.process!
         sockets.select{|s| s.valid? }.each do |s|
           begin
-            data = dat[s.addr]
+            data = gm_dat[s.addr]
             data[:ip], data[:port] = s.addr.split(":")
             data[:gamename] = game
             data[:gamedata].merge!(s.sync(s.data))
