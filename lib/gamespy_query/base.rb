@@ -69,7 +69,7 @@ STR
       str
     end
 
-    PLATFORM_IR = /-mswin32/
+    PLATFORM_IR = RUBY_PLATFORM =~ /-mswin32/
 
     # Float Regex
     RX_F = /\A\-?[0-9]+\.[0-9]*\Z/

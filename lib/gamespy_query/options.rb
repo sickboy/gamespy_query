@@ -128,8 +128,9 @@ module GamespyQuery
 
           run do |opts, args, cmd|
             opts = GamespyQuery::Options.setup_master_opts opts
-            process = GamespyQuery::SocketMaster.process_master(opts[:game], opts[:geo])
-            puts process
+            process = GamespyQuery::SocketMaster.process_master(opts[:game], opts[:geo], nil, false, true, true)
+            puts process.size
+            #puts process
           end
         end
 

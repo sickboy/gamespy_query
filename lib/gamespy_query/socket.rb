@@ -11,8 +11,9 @@ module GamespyQuery
   class Socket < UDPSocket
     include Funcs
 
+
     # Default timeout per connection state
-    DEFAULT_TIMEOUT = 3
+    DEFAULT_TIMEOUT = 4
 
     # Maximum amount of packets sent by the server
     # This is a limit set by gamespy
@@ -113,7 +114,7 @@ module GamespyQuery
 
     # Temp Workaround for IO.select issue on IR
     def _read_non_block
-      if RUBY_PLATFORM =~ PLATFORM_IR
+      if PLATFORM_IR
         time_end = Time.now + DEFAULT_TIMEOUT
         success = false
         until success || Time.now >= time_end
@@ -222,7 +223,8 @@ module GamespyQuery
     end
 
     # Determine Read/Write/Exception state
-    def handle_state; [STATE_INIT, STATE_RECEIVED_CHALLENGE].include? state; end
+    WRITE_STATES = [STATE_INIT, STATE_RECEIVED_CHALLENGE]
+    def handle_state; WRITE_STATES.include? state; end
 
     # Process data
     # Supports challenge/response and multi-packet
@@ -250,13 +252,13 @@ module GamespyQuery
       begin
         until valid? || failed
           if handle_state
-            if RUBY_PLATFORM =~ PLATFORM_IR || IO.select(nil, [self], nil, DEFAULT_TIMEOUT)
+            if PLATFORM_IR || IO.select(nil, [self], nil, DEFAULT_TIMEOUT)
               handle_write
             else
               raise TimeOutError, "TimeOut during write, #{self}"
             end
           else
-            if RUBY_PLATFORM =~ PLATFORM_IR || IO.select([self], nil, nil, DEFAULT_TIMEOUT)
+            if PLATFORM_IR || IO.select([self], nil, nil, DEFAULT_TIMEOUT)
               handle_read
             else
               raise TimeOutError, "TimeOut during read, #{self}"
