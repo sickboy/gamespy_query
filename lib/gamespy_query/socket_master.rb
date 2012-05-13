@@ -29,7 +29,7 @@ module GamespyQuery
     def process! use_threads = DEFAULT_THREADS
       sockets = []
       if use_threads.to_i > 0
-        monitor = Monitor.new # TODO...
+        monitor = Monitor.new
         threads = []
         addrs_list = @addrs.each_slice(@addrs.size / use_threads).to_a
         use_threads.times.each do |i|
@@ -38,14 +38,18 @@ module GamespyQuery
           puts "Spawning thread #{i}" if @info
 
           threads << Thread.new(list, i) do |addrs, id|
-            puts "Thread: #{id} Start, #{addrs.size}" if @info
-            out = proc(addrs, monitor)
+            begin
+              puts "Thread: #{id} Start, #{addrs.size}" if @info
+              out = proc(addrs)
 
-            puts "Thread: #{id} Pushing output to list. #{out.size}" if @info
-            monitor.synchronize do
-              sockets += out
+              puts "Thread: #{id} Pushing output to list. #{out.size}" if @info
+              monitor.synchronize do
+                sockets += out
+              end
+              puts "Thread: #{id} End" if @info
+            ensure
+              ActiveRecord::Base.connection_pool.release_connection
             end
-            puts "Thread: #{id} End" if @info
           end
         end
         threads.each {|t| t.join}
