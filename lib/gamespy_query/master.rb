@@ -54,7 +54,7 @@ module GamespyQuery
     # @param [String] geo Geo String
     def get_server_list list = nil, include_data = false, geo = nil
       addrs = []
-      list = %x[gslist -p "#{geoip_path}"#{" #{geo}-X #{get_params}" if include_data} -n #{@game}] if list.nil?
+      list = %x[gslist -C -p "#{geoip_path}"#{" #{geo}-X #{get_params}" if include_data} -n #{@game}] if list.nil?
       if include_data
         addrs = handle_data(list, geo)
       else
