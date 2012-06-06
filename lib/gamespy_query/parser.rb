@@ -63,19 +63,19 @@ module GamespyQuery
             packets = packet.split(RX_PLAYER_HEADER, 2)
 
             # Parse last game_data piece if available
-            data[:game].merge!(parse_game_data(packets[0])) unless packets[0].empty?
+            data[:game].merge!(parse_game_data( encode_string(packets[0]) )) unless packets[0].empty?
 
             # Collect the player_data if available
             player_data += packets[1]
           else
             # GameData-only
-            data[:game].merge! parse_game_data( encode_string(packet, true) )
+            data[:game].merge! parse_game_data( encode_string(packet) )
           end
         end
       end
 
       # Parse player_data
-      data[:players] = parse_player_data( encode_string(player_data, true) )
+      data[:players] = parse_player_data( encode_string(player_data) )
 
       data
     end
