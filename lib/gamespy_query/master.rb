@@ -79,6 +79,7 @@ module GamespyQuery
     # @param [String] reply Reply from gamespy
     # @param [String] geo Geo String
     def handle_data(reply, geo = nil)
+      reply = encode_string(reply) # Hmm
       reply = reply.gsub("\\\\\\", "") if geo
       reply.split("\n").select{|line| line =~ RX_ADDR_LINE }
     end
