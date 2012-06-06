@@ -101,7 +101,7 @@ STR
       number
     end
 
-    STR_UTF8 = 'UTF-8'
+    STR_UTF8, STR_UTF16 = 'UTF-8', 'UTF-16'
 
     # Convert string to UTF-8, stripping out all invalid/undefined characters
     # @param [String] str String to convert
@@ -111,11 +111,11 @@ STR
       #else
       #  str.encode(STR_UTF8, STR_UTF8, invalid: :replace, undef: :replace)
       #end
-      alt ? str.encode(STR_UTF8, invalid: :replace, undef: :replace) : str.encode(STR_UTF8, STR_UTF8, invalid: :replace, undef: :replace)
+      alt ? str.encode(STR_UTF8, invalid: :replace, undef: :replace).encode(STR_UTF16, STR_UTF8, invalid: :replace, undef: :replace).encode(STR_UTF8, STR_UTF16) : str.encode(STR_UTF16, STR_UTF8, invalid: :replace, undef: :replace).encode(STR_UTF8, STR_UTF16)
     rescue nil, Exception => e
       # Fallback - convert to UTF and replace any invalid or undefined
       Tools.log_exception e
-      str.encode(STR_UTF8, invalid: :replace, undef: :replace)
+      str.encode(STR_UTF8, invalid: :replace, undef: :replace).encode(STR_UTF16, STR_UTF8, invalid: :replace, undef: :replace).encode(STR_UTF8, STR_UTF16)
     end
   end
 
