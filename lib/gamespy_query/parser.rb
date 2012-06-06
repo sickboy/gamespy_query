@@ -69,13 +69,13 @@ module GamespyQuery
             player_data += packets[1]
           else
             # GameData-only
-            data[:game].merge!(parse_game_data(packet))
+            data[:game].merge! parse_game_data( encode_string(packet, true) )
           end
         end
       end
 
       # Parse player_data
-      data[:players] = parse_player_data(player_data)
+      data[:players] = parse_player_data( encode_string(player_data, true) )
 
       data
     end
@@ -105,7 +105,7 @@ module GamespyQuery
         if (index % 2) == 0
           key = data.to_sym
         else
-          game_data[key] = data.is_a?(String) ? encode_string(data) : data
+          game_data[key] = data
         end
       end
 
@@ -178,11 +178,11 @@ module GamespyQuery
               next # ignore
             else
               if overwrite
-                new_player_data[-1] = encode_string(info) # Overwrite latest entry
+                new_player_data[-1] = info # Overwrite latest entry
                 overwrite = false # done the overwrite
               else
                 #break if new_player_data.size == num_players
-                new_player_data << encode_string(info) # insert entry
+                new_player_data << info # insert entry
               end
             end
           end

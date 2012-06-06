@@ -106,7 +106,7 @@ module GamespyQuery
           if i % 2 == 0
             key = data.to_sym
           else
-            game_data[key] = data.is_a?(String) ? encode_string(data) : data
+            game_data[key] = data
           end
         end
         addr = "#{ip}:#{port}"

@@ -105,13 +105,13 @@ STR
 
     # Convert string to UTF-8, stripping out all invalid/undefined characters
     # @param [String] str String to convert
-    def encode_string(str)
+    def encode_string(str, alt = false)
       #if RUBY_PLATFORM =~ PLATFORM_IR
       #  System::Text::Encoding.UTF8.GetString(System::Array.of(System::Byte).new(str.bytes.to_a)).to_s
       #else
       #  str.encode(STR_UTF8, STR_UTF8, invalid: :replace, undef: :replace)
       #end
-      str.encode(STR_UTF8, STR_UTF8, invalid: :replace, undef: :replace)
+      alt ? str.encode(STR_UTF8, invalid: :replace, undef: :replace) : str.encode(STR_UTF8, STR_UTF8, invalid: :replace, undef: :replace)
     rescue nil, Exception => e
       # Fallback - convert to UTF and replace any invalid or undefined
       Tools.log_exception e
