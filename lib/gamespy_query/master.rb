@@ -6,7 +6,7 @@ module GamespyQuery
     # If impossible, perhaps should try custom implementation of master query
 
     PARAMS = [:hostname, :gamever, :gametype, :gamemode, :numplayers, :maxplayers, :password, :equalModRequired, :mission, :mapname,
-              :mod, :signatures, :verifysignatures, :gamestate, :dedicated, :platform, :sv_battleye, :language, :difficulty]
+              :mod, :signatures, :verifySignatures, :gameState, :dedicated, :platform, :sv_battleye, :language, :difficulty, :reqBuild, :reqSecureId]
 
     RX_ADDR_LINE = /^[\s\t]*([\d\.]+)[\s\t:]*(\d+)[\s\t]*(.*)$/
 
