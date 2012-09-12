@@ -86,6 +86,7 @@ module GamespyQuery
 
           option :g, :game, 'Specify game', :argument => :required
           option nil, :geo, 'Specify geo', :argument => :required
+          option :f, :filter, 'Specify filter', :argument => :required
 
           subcommand Cri::Command.new_basic_help
 
@@ -128,7 +129,7 @@ module GamespyQuery
 
           run do |opts, args, cmd|
             opts = GamespyQuery::Options.setup_master_opts opts
-            process = GamespyQuery::SocketMaster.process_master(opts[:game], opts[:geo], nil, false, true, true)
+            process = GamespyQuery::SocketMaster.process_master(opts[:game], opts[:geo], nil, false, true, true, opts[:filter])
             puts process.size
             #puts process
           end

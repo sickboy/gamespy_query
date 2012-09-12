@@ -34,8 +34,8 @@ module GamespyQuery
     # Initializes the instance
     # @param [String] geo Geo string
     # @param [String] game Game string
-    def initialize(geo = nil, game = "arma2oapc", geoip_path = nil)
-      @geo, @game, @geoip_path = geo, game, geoip_path
+    def initialize(geo = nil, game = "arma2oapc", geoip_path = nil, filter = nil)
+      @geo, @game, @geoip_path, @filter = geo, game, geoip_path, filter
     end
 
     # Convert the master browser data to hash
@@ -52,9 +52,9 @@ module GamespyQuery
     # @param [String] list Specify list or nil to fetch the list
     # @param [Boolean] include_data Should server info data from the master browser be included
     # @param [String] geo Geo String
-    def get_server_list list = nil, include_data = false, geo = nil
+    def get_server_list list = nil, include_data = false, geo = nil, filter = nil
       addrs = []
-      list = %x[gslist -C -p "#{geoip_path}"#{" #{geo}-X #{get_params}" if include_data} -n #{@game}] if list.nil?
+      list = %x[gslist -C -p "#{geoip_path}"#{" #{geo}-X #{get_params}" if include_data} -n #{@game}#{" -f \"#{filter}\"" if filter}] if list.nil?
       if include_data
         addrs = handle_data(list, geo)
       else
@@ -72,7 +72,7 @@ module GamespyQuery
         Tools.logger.warn "Warning: GeoIP.dat database missing. Can't parse countries. #{geoip_path}"
         geo = nil
       end
-      get_server_list(nil, true, geo)
+      get_server_list(nil, true, geo, @filter)
     end
 
     # Handle reply data from gamespy master browser

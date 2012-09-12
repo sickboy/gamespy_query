@@ -111,7 +111,7 @@ module GamespyQuery
       # @param [String] game Game to fetch info from
       # @param [String] geo Geo location enabled?
       # @param [Array] remote Hostname and path+filename strings if the list needs to be fetched from http server
-      def process_master(game = "arma2oapc", geo = nil, remote = nil, dedicated_only = false, sm_dedicated_only = true, info = false)
+      def process_master(game = "arma2oapc", geo = nil, remote = nil, dedicated_only = false, sm_dedicated_only = true, info = false, filter = nil)
         master = GamespyQuery::Master.new(geo, game)
         list = if remote
                  Net::HTTP.start(remote[0]) do |http|
@@ -119,7 +119,7 @@ module GamespyQuery
                    resp.body.split("\n")
                  end
                else
-                 master.get_server_list(nil, true, geo)
+                 master.get_server_list(nil, true, geo, filter)
                end
 
         dat = master.process list
