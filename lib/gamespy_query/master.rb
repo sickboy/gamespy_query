@@ -34,8 +34,8 @@ module GamespyQuery
     # Initializes the instance
     # @param [String] geo Geo string
     # @param [String] game Game string
-    def initialize(geo = nil, game = "arma2oapc", geoip_path = nil, filter = nil)
-      @geo, @game, @geoip_path, @filter = geo, game, geoip_path, filter
+    def initialize(geo = nil, game = "arma2oapc", geoip_path = nil, filter = nil, master_server = nil, enctype = nil)
+      @geo, @game, @geoip_path, @filter, @master_server, @enctype = geo, game, geoip_path, filter, master_server, enctype
     end
 
     # Convert the master browser data to hash
@@ -54,7 +54,7 @@ module GamespyQuery
     # @param [String] geo Geo String
     def get_server_list list = nil, include_data = false, geo = nil, filter = nil
       addrs = []
-      list = %x[gslist -C -p "#{geoip_path}"#{" #{geo}-X #{get_params}" if include_data} -n #{@game}#{" -f \"#{filter}\"" if filter}] if list.nil?
+      list = %x[gslist -C -p "#{geoip_path}"#{" #{geo}-X #{get_params}" if include_data} -n #{@game}#{" -f \"#{filter}\"" if filter} #{"-t #{@enctype}" if @enctype} #{"-x #{@master_server}" if @master_server}] if list.nil?
       if include_data
         addrs = handle_data(list, geo)
       else
